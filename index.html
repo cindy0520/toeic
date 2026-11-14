@@ -321,7 +321,7 @@
             <i class="fa-solid fa-book-bookmark text-pink-500"></i>
             單字清單 (<span id="list-count" class="text-pink-600">25</span>)
           </div>
-          <div class="text-xs text-slate-400">點擊 ⭐ 即時自動保存</div>
+          <div class="text-xs text-slate-400">點擊 💙 / ⭐ 即時自動保存</div>
         </div>
         <div id="vocab-table-body" class="divide-y divide-rose-50 max-h-[500px] overflow-y-auto">
 
@@ -2643,6 +2643,7 @@
 
       currentList.forEach((item, idx) => {
         const isStarred = starredSet.has(item.id);
+        const isHearted = heartedSet.has(item.id);
         const row = document.createElement('div');
         row.className = "p-3.5 flex items-center justify-between hover:bg-pink-50/40 transition-colors";
         row.innerHTML = `
@@ -2660,9 +2661,14 @@
               <div class="text-xs text-slate-500 mt-0.5">${item.meaning}</div>
             </div>
           </div>
-          <button onclick="toggleRowStar(${item.id})" class="p-2 text-xl focus:outline-none transition-transform active:scale-125">
-                <i class="${isStarred ? 'fa-solid fa-star text-amber-400' : 'fa-regular fa-star text-slate-300 hover:text-amber-400'}"></i>
-          </button>
+          <div class="flex items-center gap-1 shrink-0">
+            <button onclick="toggleRowHeart(${item.id})" class="p-2 text-lg sm:text-xl focus:outline-none transition-transform active:scale-125" title="一直記不住 / 取消愛心">
+              <i class="${isHearted ? 'fa-solid fa-heart text-sky-400' : 'fa-regular fa-heart text-slate-300 hover:text-sky-400'}"></i>
+            </button>
+            <button onclick="toggleRowStar(${item.id})" class="p-2 text-xl focus:outline-none transition-transform active:scale-125" title="加入/取消星號">
+              <i class="${isStarred ? 'fa-solid fa-star text-amber-400' : 'fa-regular fa-star text-slate-300 hover:text-amber-400'}"></i>
+            </button>
+          </div>
         `;
         tbody.appendChild(row);
       });
@@ -2692,6 +2698,37 @@
             currentIndex = currentList.length - 1;
           }
           document.getElementById('current-part-label').innerText = `${currentLevel}分 Part ${currentPart} ⭐ 錯題 (${currentList.length} 字)`;
+        }
+      }
+
+      updateCardUI();
+      renderListUI();
+    }
+
+    function toggleRowHeart(id) {
+      if (heartedSet.has(id)) {
+        heartedSet.delete(id);
+      } else {
+        heartedSet.add(id);
+      }
+      saveStarsAutomatically(true);
+      updateStarredBadge();
+      updateHeartedBadge();
+      renderPartButtons();
+
+      if (isHeartedOnlyMode) {
+        const remaining = getHeartedWordsForPart(currentLevel, currentPart);
+        if (remaining.length === 0) {
+          showToast(`🎉 太棒了！【Part ${currentPart}】難記愛心單字已全部掌握！返回完整單元`);
+          isHeartedOnlyMode = false;
+          loadPart(currentPart);
+          return;
+        } else {
+          currentList = remaining;
+          if (currentIndex >= currentList.length) {
+            currentIndex = currentList.length - 1;
+          }
+          document.getElementById('current-part-label').innerText = `${currentLevel}分 Part ${currentPart} 💙 一直記不住 (${currentList.length} 字)`;
         }
       }
 
