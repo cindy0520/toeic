@@ -225,48 +225,48 @@
           </div>
 
           <!-- 卡片背面 (中文釋義與例句) -->
-          <div class="absolute inset-0 w-full h-full backface-hidden rotate-y-180 p-8 flex flex-col justify-between rounded-3xl bg-slate-100 text-slate-800 shadow-xl border border-slate-200">
-            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+          <div class="absolute inset-0 w-full h-full backface-hidden rotate-y-180 p-8 flex flex-col justify-between rounded-3xl bg-slate-900 text-white shadow-2xl border border-slate-800">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
               <div class="flex items-center gap-2">
-                <span id="card-word-back" class="font-extrabold text-xl text-pink-600">company</span>
-                <span id="card-pos-back" class="text-xs text-slate-500 font-mono">(n.)</span>
+                <span id="card-word-back" class="font-extrabold text-xl text-pink-300">company</span>
+                <span id="card-pos-back" class="text-xs text-slate-400 font-mono">(n.)</span>
               </div>
               <div class="flex items-center gap-1 -mr-2">
                 <button onclick="event.stopPropagation(); toggleCurrentCardHeart();" class="p-2 text-2xl sm:text-3xl transition-transform active:scale-125 focus:outline-none" title="一直記不住 / 取消愛心 (Shift)">
-                  <i id="card-heart-icon-back" class="fa-regular fa-heart text-slate-300 hover:text-sky-400"></i>
+                  <i id="card-heart-icon-back" class="fa-regular fa-heart text-slate-600 hover:text-sky-400"></i>
                 </button>
                 <button onclick="event.stopPropagation(); toggleCurrentCardStar();" class="p-2 text-3xl transition-transform active:scale-125 focus:outline-none" title="加入/取消收藏 (Enter)">
-                  <i id="card-star-icon-back" class="fa-regular fa-star text-slate-300 hover:text-amber-400"></i>
+                  <i id="card-star-icon-back" class="fa-regular fa-star text-slate-600 hover:text-amber-400"></i>
                 </button>
               </div>
             </div>
 
             <div class="my-auto py-2">
-              <div class="text-2xl sm:text-3xl font-black text-amber-600 mb-2" id="card-meaning">公司；陪伴</div>
+              <div class="text-2xl sm:text-3xl font-black text-amber-300 mb-2" id="card-meaning">公司；陪伴</div>
 
-              <div class="bg-white/90 p-4 rounded-2xl border border-slate-200/80 shadow-xs relative">
+              <div class="bg-slate-800/90 p-4 rounded-2xl border border-slate-700/60 relative">
                 <div class="flex items-start justify-between gap-2 mb-1.5">
-                  <p id="card-sentence-en" class="text-sm text-slate-700 font-medium leading-relaxed flex-1">She works for a tech company in the Bay Area as an engineer.</p>
-                  <button onclick="event.stopPropagation(); playCurrentSentenceAudio();" class="text-slate-400 hover:text-amber-500 p-1.5 rounded-xl hover:bg-slate-100 transition-all text-sm shrink-0 flex items-center gap-1 cursor-pointer" title="重播整句例句發音">
-                    <i class="fa-solid fa-volume-high text-amber-500"></i>
+                  <p id="card-sentence-en" class="text-sm text-slate-200 font-medium leading-relaxed flex-1">She works for a tech company in the Bay Area as an engineer.</p>
+                  <button onclick="event.stopPropagation(); playCurrentSentenceAudio();" class="text-slate-400 hover:text-amber-300 p-1.5 rounded-xl hover:bg-slate-700/80 transition-all text-sm shrink-0 flex items-center gap-1 cursor-pointer" title="重播整句例句發音">
+                    <i class="fa-solid fa-volume-high text-amber-400"></i>
                   </button>
                 </div>
-                <p id="card-sentence-zh" class="text-xs text-slate-500 leading-relaxed font-normal">她在灣區的一家科技公司擔任工程師。</p>
-                <div class="flex items-center justify-between text-[10px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
-                  <span><i class="fa-regular fa-lightbulb text-amber-500 mr-1"></i>鼠標移至虛線單字可看釋義</span>
-                  <span class="text-[9px] text-slate-400">點擊單字可發音 🔊</span>
+                <p id="card-sentence-zh" class="text-xs text-slate-400 leading-relaxed font-normal">她在灣區的一家科技公司擔任工程師。</p>
+                <div class="flex items-center justify-between text-[10px] text-slate-400/80 mt-2 pt-2 border-t border-slate-700/50">
+                  <span><i class="fa-regular fa-lightbulb text-amber-400 mr-1"></i>鼠標移至虛線單字可看釋義</span>
+                  <span class="text-[9px] text-slate-500">點擊單字可發音 🔊</span>
                 </div>
               </div>
             </div>
 
             <!-- 鍵盤快捷鍵提示 -->
-            <div class="text-center text-xs text-slate-500 font-medium">
-              <span class="inline-flex flex-wrap items-center justify-center gap-1.5 bg-white/80 px-3 py-1 rounded-full border border-slate-200">
+            <div class="text-center text-xs text-slate-400 font-medium">
+              <span class="inline-flex flex-wrap items-center justify-center gap-1.5 bg-slate-800/90 px-3 py-1 rounded-full border border-slate-700">
                 <i class="fa-solid fa-keyboard text-pink-400"></i>
-                <span class="font-bold text-slate-700">Space</span> 翻回正面・
-                <span class="font-bold text-slate-700">Enter</span> 收藏 ⭐・
-                <span class="font-bold text-slate-700">Shift</span> 愛心 💙・
-                <span class="font-bold text-slate-700">← →</span> 切換
+                <span class="font-bold text-pink-300">Space</span> 翻回正面・
+                <span class="font-bold text-pink-300">Enter</span> 收藏 ⭐・
+                <span class="font-bold text-pink-300">Shift</span> 愛心 💙・
+                <span class="font-bold text-pink-300">← →</span> 切換
               </span>
             </div>
           </div>
@@ -2455,7 +2455,7 @@
         backStar.className = "fa-solid fa-star text-amber-400 drop-shadow-xs";
       } else {
         frontStar.className = "fa-regular fa-star text-slate-300 hover:text-amber-400";
-        backStar.className = "fa-regular fa-star text-slate-300 hover:text-amber-400";
+        backStar.className = "fa-regular fa-star text-slate-600 hover:text-amber-400";
       }
 
       // 淺藍色愛心圖示更新
@@ -2468,7 +2468,7 @@
           backHeart.className = "fa-solid fa-heart text-sky-400 drop-shadow-xs";
         } else {
           frontHeart.className = "fa-regular fa-heart text-slate-300 hover:text-sky-400";
-          backHeart.className = "fa-regular fa-heart text-slate-300 hover:text-sky-400";
+          backHeart.className = "fa-regular fa-heart text-slate-600 hover:text-sky-400";
         }
       }
 
