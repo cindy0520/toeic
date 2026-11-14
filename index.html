@@ -92,6 +92,12 @@
         </label>
 
 
+        <button id="btn-heart-filter" onclick="toggleHeartedView()" class="relative px-2.5 sm:px-3 py-1.5 rounded-xl border border-sky-300 bg-sky-50 hover:bg-sky-100 text-sky-900 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all" title="篩選本單元一直記不住的愛心單字">
+          <i class="fa-solid fa-heart text-sky-400 text-sm"></i>
+          <span id="header-heart-filter-label" class="hidden sm:inline">難記愛心</span>
+          <span id="hearted-badge" class="bg-sky-400 text-white text-[11px] px-1.5 py-0.2 rounded-full font-black shadow-xs">0</span>
+        </button>
+
         <button id="btn-star-filter" onclick="toggleStarredView()" class="relative px-3 sm:px-4 py-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all">
           <i class="fa-solid fa-star text-amber-400 text-sm"></i>
           <span id="header-star-filter-label">本單元錯題</span>
@@ -186,10 +192,16 @@
           <div class="absolute inset-0 w-full h-full backface-hidden p-8 flex flex-col justify-between rounded-3xl bg-gradient-to-b from-white via-white to-pink-50/40 border border-rose-100">
             <div class="flex items-center justify-between">
               <span id="card-pos-front" class="px-3 py-1 rounded-full bg-pink-100 text-pink-700 text-xs font-extrabold uppercase tracking-wider">noun</span>
-              <!-- 星號按鈕 (點擊或按 Enter 收藏) -->
-              <button onclick="event.stopPropagation(); toggleCurrentCardStar();" class="p-2 -mr-2 text-3xl transition-transform active:scale-125 focus:outline-none" title="加入/取消收藏 (Enter)">
-                <i id="card-star-icon" class="fa-regular fa-star text-slate-300 hover:text-amber-400"></i>
-              </button>
+              <div class="flex items-center gap-1 -mr-2">
+                <!-- 愛心按鈕 (點擊或按 Shift 收藏一直記不住的單字) -->
+                <button onclick="event.stopPropagation(); toggleCurrentCardHeart();" class="p-2 text-2xl sm:text-3xl transition-transform active:scale-125 focus:outline-none" title="一直記不住 / 取消愛心 (Shift)">
+                  <i id="card-heart-icon" class="fa-regular fa-heart text-slate-300 hover:text-sky-400"></i>
+                </button>
+                <!-- 星號按鈕 (點擊或按 Enter 收藏) -->
+                <button onclick="event.stopPropagation(); toggleCurrentCardStar();" class="p-2 text-3xl transition-transform active:scale-125 focus:outline-none" title="加入/取消收藏 (Enter)">
+                  <i id="card-star-icon" class="fa-regular fa-star text-slate-300 hover:text-amber-400"></i>
+                </button>
+              </div>
             </div>
 
             <div class="text-center my-auto">
@@ -202,10 +214,11 @@
 
             <!-- 鍵盤快捷鍵提示 -->
             <div class="text-center text-xs text-slate-400 font-medium">
-              <span class="inline-flex items-center gap-1.5 bg-pink-50/70 px-3 py-1 rounded-full border border-pink-100">
+              <span class="inline-flex flex-wrap items-center justify-center gap-1.5 bg-pink-50/70 px-3 py-1 rounded-full border border-pink-100">
                 <i class="fa-solid fa-keyboard text-pink-400"></i>
                 <span class="font-bold text-slate-700">Space</span> 翻面・
                 <span class="font-bold text-slate-700">Enter</span> 收藏 ⭐・
+                <span class="font-bold text-slate-700">Shift</span> 愛心 💙・
                 <span class="font-bold text-slate-700">← →</span> 切換
               </span>
             </div>
@@ -218,9 +231,14 @@
                 <span id="card-word-back" class="font-extrabold text-xl text-pink-300">company</span>
                 <span id="card-pos-back" class="text-xs text-slate-400 font-mono">(n.)</span>
               </div>
-              <button onclick="event.stopPropagation(); toggleCurrentCardStar();" class="p-2 -mr-2 text-3xl transition-transform active:scale-125 focus:outline-none" title="加入/取消收藏 (Enter)">
-                <i id="card-star-icon-back" class="fa-regular fa-star text-slate-600 hover:text-amber-400"></i>
-              </button>
+              <div class="flex items-center gap-1 -mr-2">
+                <button onclick="event.stopPropagation(); toggleCurrentCardHeart();" class="p-2 text-2xl sm:text-3xl transition-transform active:scale-125 focus:outline-none" title="一直記不住 / 取消愛心 (Shift)">
+                  <i id="card-heart-icon-back" class="fa-regular fa-heart text-slate-600 hover:text-sky-400"></i>
+                </button>
+                <button onclick="event.stopPropagation(); toggleCurrentCardStar();" class="p-2 text-3xl transition-transform active:scale-125 focus:outline-none" title="加入/取消收藏 (Enter)">
+                  <i id="card-star-icon-back" class="fa-regular fa-star text-slate-600 hover:text-amber-400"></i>
+                </button>
+              </div>
             </div>
 
             <div class="my-auto py-2">
@@ -243,10 +261,11 @@
 
             <!-- 鍵盤快捷鍵提示 -->
             <div class="text-center text-xs text-slate-400 font-medium">
-              <span class="inline-flex items-center gap-1.5 bg-slate-800/90 px-3 py-1 rounded-full border border-slate-700">
+              <span class="inline-flex flex-wrap items-center justify-center gap-1.5 bg-slate-800/90 px-3 py-1 rounded-full border border-slate-700">
                 <i class="fa-solid fa-keyboard text-pink-400"></i>
                 <span class="font-bold text-pink-300">Space</span> 翻回正面・
                 <span class="font-bold text-pink-300">Enter</span> 收藏 ⭐・
+                <span class="font-bold text-pink-300">Shift</span> 愛心 💙・
                 <span class="font-bold text-pink-300">← →</span> 切換
               </span>
             </div>
@@ -1448,8 +1467,10 @@
     let currentIndex = 0;
     let isFlipped = false;
     let starredSet = new Set(DEFAULT_STARS);
+    let heartedSet = new Set(); // 儲存「一直記不住」的淺藍色愛心單字 ID
     let readPartsSet = new Set(); // 儲存已讀單元鍵，格式如 "400-1", "400-2", "600-1"
     let isStarredOnlyMode = false;
+    let isHeartedOnlyMode = false;
     let autoAudio = true;
 
     // 測驗變數
@@ -1579,6 +1600,9 @@
           if (Array.isArray(cloud.starred_ids)) {
             starredSet = new Set(cloud.starred_ids);
           }
+          if (Array.isArray(cloud.hearted_ids)) {
+            heartedSet = new Set(cloud.hearted_ids);
+          }
           if (Array.isArray(cloud.read_parts)) {
             readPartsSet = new Set(cloud.read_parts);
           }
@@ -1609,6 +1633,7 @@
         localStorage.setItem('toeic_sync_updated_at', String(now));
         const content = JSON.stringify({
           starred_ids: Array.from(starredSet).sort((a, b) => a - b),
+          hearted_ids: Array.from(heartedSet).sort((a, b) => a - b),
           read_parts: Array.from(readPartsSet),
           updated_at: now
         });
@@ -1709,15 +1734,19 @@
     function saveLocalOnly() {
       const starArr = Array.from(starredSet);
       const starJson = JSON.stringify(starArr);
+      const heartArr = Array.from(heartedSet);
       try {
         localStorage.setItem('toeic_starred', starJson);
         localStorage.setItem('toeic400_starred', starJson);
+        localStorage.setItem('toeic_hearted', JSON.stringify(heartArr));
         localStorage.setItem('toeic_read_parts', JSON.stringify(Array.from(readPartsSet)));
       } catch(e) {}
       writeToIDB('starred_ids', starArr);
+      writeToIDB('hearted_ids', heartArr);
       writeToIDB('read_parts', Array.from(readPartsSet));
       try { setCookie('toeic400_starred', starJson, 365); } catch(e) {}
       updateStarredBadge();
+      if (typeof updateHeartedBadge === 'function') updateHeartedBadge();
     }
 
     // 整合式全自動載入（本機優先防覆蓋 + 雲端 Gist 同步 + 保持網址乾淨）
@@ -1779,6 +1808,20 @@
       if (readPartsSet.size === 0 && idb) {
         const idbRead = await readFromIDB('read_parts');
         if (Array.isArray(idbRead)) readPartsSet = new Set(idbRead);
+      }
+
+      // 讀取「難記愛心」記錄
+      try {
+        const lsHeart = localStorage.getItem('toeic_hearted');
+        if (lsHeart) {
+          const parsed = JSON.parse(lsHeart);
+          if (Array.isArray(parsed)) heartedSet = new Set(parsed);
+        }
+      } catch(e) {}
+
+      if (heartedSet.size === 0 && idb) {
+        const idbHeart = await readFromIDB('hearted_ids');
+        if (Array.isArray(idbHeart)) heartedSet = new Set(idbHeart);
       }
 
       // 預設將 400-1 標記為已讀
@@ -2074,6 +2117,31 @@
       return list.filter(item => starredSet.has(item.id));
     }
 
+    function getHeartedWordsForPart(level, part) {
+      const list = getWordsForLevelAndPart(level, part);
+      return list.filter(item => heartedSet.has(item.id));
+    }
+
+    function updateHeartedBadge() {
+      const partHearts = getHeartedWordsForPart(currentLevel, currentPart).length;
+      const badge = document.getElementById('hearted-badge');
+      if (badge) badge.innerText = partHearts;
+
+      const headerLabel = document.getElementById('header-heart-filter-label');
+      const heartBtn = document.getElementById('btn-heart-filter');
+      if (isHeartedOnlyMode) {
+        if (headerLabel) headerLabel.innerText = "返回全部";
+        if (heartBtn) {
+          heartBtn.className = "relative px-2.5 sm:px-3 py-1.5 rounded-xl border border-sky-500 bg-sky-400 text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all shadow-md ring-2 ring-sky-200";
+        }
+      } else {
+        if (headerLabel) headerLabel.innerText = "難記愛心";
+        if (heartBtn) {
+          heartBtn.className = "relative px-2.5 sm:px-3 py-1.5 rounded-xl border border-sky-300 bg-sky-50 hover:bg-sky-100 text-sky-900 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all";
+        }
+      }
+    }
+
     function updateStarredBadge() {
       const partStars = getStarredWordsForPart(currentLevel, currentPart).length;
 
@@ -2114,6 +2182,7 @@
       currentLevel = lvl;
       currentPart = 1;
       isStarredOnlyMode = false;
+      isHeartedOnlyMode = false;
 
       renderLevelButtons();
       document.getElementById('app-main-title').innerText = `多益衝${currentLevel}分單字卡`;
@@ -2239,6 +2308,7 @@
     function loadPart(partNum) {
       currentPart = partNum;
       isStarredOnlyMode = false;
+      isHeartedOnlyMode = false;
 
       // 自動標記此單元為已讀
       markPartAsRead(currentLevel, partNum);
@@ -2260,6 +2330,7 @@
       isFlipped = false;
 
       updateStarredBadge();
+      updateHeartedBadge();
       renderPartButtons();
 
       updateCardUI();
@@ -2278,6 +2349,7 @@
         }
 
         isStarredOnlyMode = true;
+        isHeartedOnlyMode = false;
         currentList = partStarred;
         document.getElementById('current-part-label').innerText = `${currentLevel}分 Part ${currentPart} ⭐ 錯題 (${currentList.length} 字)`;
         showToast(`已切換至【Part ${currentPart}】星號錯題 (${currentList.length} 字)`);
@@ -2291,6 +2363,40 @@
       currentIndex = 0;
       isFlipped = false;
       updateStarredBadge();
+      updateHeartedBadge();
+      renderPartButtons();
+      updatePartReadToggleBtn();
+      updateCardUI();
+      renderListUI();
+      resetQuiz();
+    }
+
+    // 切換當前單元的「一直記不住」淺藍色愛心單字模式
+    function toggleHeartedView() {
+      const partHearted = getHeartedWordsForPart(currentLevel, currentPart);
+
+      if (!isHeartedOnlyMode) {
+        if (partHearted.length === 0) {
+          showToast(`【Part ${currentPart}】目前沒有愛心單字！請在卡片按 Shift 或點 💙 收藏`);
+          return;
+        }
+
+        isHeartedOnlyMode = true;
+        isStarredOnlyMode = false;
+        currentList = partHearted;
+        document.getElementById('current-part-label').innerText = `${currentLevel}分 Part ${currentPart} 💙 一直記不住 (${currentList.length} 字)`;
+        showToast(`已切換至【Part ${currentPart}】愛心單字 (${currentList.length} 字)`);
+      } else {
+        isHeartedOnlyMode = false;
+        loadPart(currentPart);
+        showToast(`已返回【Part ${currentPart}】完整單元`);
+        return;
+      }
+
+      currentIndex = 0;
+      isFlipped = false;
+      updateStarredBadge();
+      updateHeartedBadge();
       renderPartButtons();
       updatePartReadToggleBtn();
       updateCardUI();
@@ -2347,6 +2453,20 @@
         backStar.className = "fa-regular fa-star text-slate-600 hover:text-amber-400";
       }
 
+      // 淺藍色愛心圖示更新
+      const isHearted = heartedSet.has(item.id);
+      const frontHeart = document.getElementById('card-heart-icon');
+      const backHeart = document.getElementById('card-heart-icon-back');
+      if (frontHeart && backHeart) {
+        if (isHearted) {
+          frontHeart.className = "fa-solid fa-heart text-sky-400 drop-shadow-xs";
+          backHeart.className = "fa-solid fa-heart text-sky-400 drop-shadow-xs";
+        } else {
+          frontHeart.className = "fa-regular fa-heart text-slate-300 hover:text-sky-400";
+          backHeart.className = "fa-regular fa-heart text-slate-600 hover:text-sky-400";
+        }
+      }
+
       // 重設正反面視角
       const inner = document.getElementById('flashcard-inner');
       if (isFlipped) {
@@ -2401,6 +2521,7 @@
 
       saveStarsAutomatically(true);
       updateStarredBadge();
+      updateHeartedBadge();
       renderPartButtons();
 
       if (isStarredOnlyMode) {
@@ -2416,6 +2537,43 @@
             currentIndex = currentList.length - 1;
           }
           document.getElementById('current-part-label').innerText = `${currentLevel}分 Part ${currentPart} ⭐ 錯題 (${currentList.length} 字)`;
+        }
+      }
+
+      updateCardUI();
+      renderListUI();
+    }
+
+    // ===== 4-2. 淺藍色愛心收藏切換 (支援按 Shift 鍵加入/取消一直記不住的單字) =====
+    function toggleCurrentCardHeart() {
+      const item = currentList[currentIndex];
+      if (!item) return;
+
+      if (heartedSet.has(item.id)) {
+        heartedSet.delete(item.id);
+        showToast(`已取消愛心: ${item.word}`);
+      } else {
+        heartedSet.add(item.id);
+        showToast(`💙 已加入難記愛心: ${item.word}`);
+      }
+
+      saveStarsAutomatically(true);
+      updateHeartedBadge();
+      renderPartButtons();
+
+      if (isHeartedOnlyMode) {
+        const remaining = getHeartedWordsForPart(currentLevel, currentPart);
+        if (remaining.length === 0) {
+          showToast(`🎉 太棒了！【Part ${currentPart}】難記愛心單字已全部掌握！返回完整單元`);
+          isHeartedOnlyMode = false;
+          loadPart(currentPart);
+          return;
+        } else {
+          currentList = remaining;
+          if (currentIndex >= currentList.length) {
+            currentIndex = currentList.length - 1;
+          }
+          document.getElementById('current-part-label').innerText = `${currentLevel}分 Part ${currentPart} 💙 一直記不住 (${currentList.length} 字)`;
         }
       }
 
@@ -2518,6 +2676,7 @@
       }
       saveStarsAutomatically(true);
       updateStarredBadge();
+      updateHeartedBadge();
       renderPartButtons();
 
       if (isStarredOnlyMode) {
@@ -2701,6 +2860,9 @@
       } else if (e.key === 'Enter' || e.code === 'Enter' || e.keyCode === 13) {
         e.preventDefault();
         toggleCurrentCardStar();
+      } else if (e.key === 'Shift' && !e.repeat) {
+        e.preventDefault();
+        toggleCurrentCardHeart();
       }
     });
 
