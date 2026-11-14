@@ -288,9 +288,14 @@
 
     <section id="mode-quiz" class="hidden flex-1 flex flex-col items-center justify-center">
       <div class="w-full max-w-lg bg-white p-6 sm:p-7 rounded-3xl shadow-lg border border-rose-100">
-        <div class="flex items-center justify-between text-xs text-slate-400 mb-4 pb-2 border-b border-rose-50">
+        <div class="flex items-center justify-between gap-2 text-xs text-slate-400 mb-4 pb-2 border-b border-rose-50 flex-wrap">
           <span id="quiz-progress" class="font-bold text-slate-600">第 1 題 / 共 10 題</span>
-          <span id="quiz-score" class="font-extrabold text-pink-600 bg-pink-50 px-2.5 py-1 rounded-full">得分: 0</span>
+          <div class="flex items-center gap-2">
+            <button id="btn-quiz-all-800" onclick="initQuiz(true)" class="hidden px-2.5 py-1 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-[11px] transition-all" title="一次挑戰全部 250 個 800分單字">
+              挑戰 800分全部 (250字)
+            </button>
+            <span id="quiz-score" class="font-extrabold text-pink-600 bg-pink-50 px-2.5 py-1 rounded-full">得分: 0</span>
+          </div>
         </div>
 
         <div class="text-center py-3 mb-4">
@@ -914,7 +919,7 @@
       { id: 497, level: 600, word: "feature", pos: "v./n.", meaning: "以…為特色；特色；功能", en: "Our classes feature hands-on and interactive activities.", zh: "我們的課程以實作及互動的活動為特色。" },
       { id: 498, level: 600, word: "default", pos: "v./n.", meaning: "違約；拖欠；預設值", en: "The settings will return to default after the update.", zh: "設定將在更新後回復為預設值。" },
       { id: 499, level: 600, word: "sponsor", pos: "v./n.", meaning: "贊助；資助", en: "The company will sponsor the upcoming event.", zh: "公司將贊助即將到來的活動。" },
-      { id: 500, level: 600, word: "malfunction", pos: "v./n.", meaning: "故障；失靈", en: "The printer began to malfunction during the meeting.", zh: "印表機在會議期間開始故障。" },,
+      { id: 500, level: 600, word: "malfunction", pos: "v./n.", meaning: "故障；失靈", en: "The printer began to malfunction during the meeting.", zh: "印表機在會議期間開始故障。" },
 
       // --- PART 1 (800, 501 - 525) ---
       { id: 501, level: 800, word: "commitment", pos: "n.", meaning: "承諾；奉獻；必須做的事", en: "The team members showed great commitment to their work.", zh: "團隊成員們對工作表現出極大的投入。" },
@@ -1184,7 +1189,7 @@
       { id: 747, level: 800, word: "decline", pos: "v./n.", meaning: "減少；衰退；拒絕", en: "Sales declined significantly last quarter.", zh: "上季度的銷售量大幅下降。" },
       { id: 748, level: 800, word: "boost", pos: "v./n.", meaning: "增強；促進", en: "The company downsized to cut costs and boost profits.", zh: "那家公司為了削減成本和提高利潤而裁員。" },
       { id: 749, level: 800, word: "release", pos: "v./n.", meaning: "發表；發行；釋放", en: "The mayor released a statement explaining the situation.", zh: "市長發表聲明解釋情況。" },
-      { id: 750, level: 800, word: "delegate", pos: "v./n.", meaning: "委派；委任；代表人", en: "The manager will delegate the task to his assistant.", zh: "經理將這項任務委託給助理。" },,
+      { id: 750, level: 800, word: "delegate", pos: "v./n.", meaning: "委派；委任；代表人", en: "The manager will delegate the task to his assistant.", zh: "經理將這項任務委託給助理。" },
 
       // --- PART 1 (990, 751 - 775) ---
       { id: 751, level: 990, word: "entrepreneur", pos: "n.", meaning: "企業家；創業家", en: "The successful entrepreneur launched three companies last year.", zh: "這位成功的企業家去年創立了三家公司。" },
@@ -2335,7 +2340,7 @@
 
       updateCardUI();
       renderListUI();
-      resetQuiz();
+      refreshQuizIfActive();
     }
 
     // 切換當前單元的星號錯題模式 (每一個 Part 擁有獨立的星號錯題)
@@ -2368,7 +2373,7 @@
       updatePartReadToggleBtn();
       updateCardUI();
       renderListUI();
-      resetQuiz();
+      refreshQuizIfActive();
     }
 
     // 切換當前單元的「一直記不住」淺藍色愛心單字模式
@@ -2401,7 +2406,7 @@
       updatePartReadToggleBtn();
       updateCardUI();
       renderListUI();
-      resetQuiz();
+      refreshQuizIfActive();
     }
 
     // ===== 3. 翻轉卡片邏輯 (支援按空白鍵 Space 翻面) =====
@@ -2749,9 +2754,33 @@
       document.getElementById('quiz-score').innerText = `得分: 0`;
     }
 
-    function initQuiz() {
+    function refreshQuizIfActive() {
+      const quizSection = document.getElementById('mode-quiz');
+      if (quizSection && !quizSection.classList.contains('hidden')) {
+        initQuiz(false);
+      } else {
+        resetQuiz();
+      }
+    }
+
+    function initQuiz(all800 = false) {
       resetQuiz();
-      quizList = [...currentList];
+      const all800Btn = document.getElementById('btn-quiz-all-800');
+      if (all800Btn) {
+        if (currentLevel === 800) {
+          all800Btn.classList.remove('hidden');
+        } else {
+          all800Btn.classList.add('hidden');
+        }
+      }
+
+      if (all800) {
+        quizList = VOCAB_DATA.filter(v => v && v.level === 800);
+        showToast(`🔥 已載入全部 800分單字挑戰 (${quizList.length} 題)`);
+      } else {
+        quizList = [...currentList].filter(Boolean);
+      }
+
       for (let i = quizList.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [quizList[i], quizList[j]] = [quizList[j], quizList[i]];
@@ -2786,7 +2815,7 @@
 
       // 1 正確 + 3 干擾項
       const options = [qItem.meaning];
-      const otherVocabs = VOCAB_DATA.filter(v => v.id !== qItem.id && v.meaning !== qItem.meaning);
+      const otherVocabs = VOCAB_DATA.filter(v => v && v.id !== qItem.id && v.meaning !== qItem.meaning);
       
       while (options.length < 4 && otherVocabs.length > 0) {
         const randIdx = Math.floor(Math.random() * otherVocabs.length);
