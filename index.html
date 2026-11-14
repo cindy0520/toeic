@@ -66,15 +66,20 @@
         <div>
           <h1 id="app-main-title" class="font-extrabold text-base sm:text-lg text-slate-800 leading-tight">多益衝400分單字卡</h1>
           <div class="flex items-center gap-1.5 mt-0.5">
-            <span id="sync-status-badge" class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+            <button onclick="openSyncModal()" id="sync-status-badge" class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full hover:bg-emerald-100 transition-colors cursor-pointer" title="點擊設定雲端同步">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>自動同步儲存中</span>
-            </span>
+              <span>雲端同步就緒</span>
+            </button>
           </div>
         </div>
       </div>
 
       <div class="flex items-center gap-2">
+
+        <button onclick="openSyncModal()" class="px-2.5 py-1.5 rounded-xl border border-sky-200 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-semibold flex items-center gap-1 transition-all" title="跨裝置雲端同步設定">
+          <i class="fa-solid fa-cloud text-sky-500"></i>
+          <span class="hidden sm:inline">雲端同步</span>
+        </button>
 
         <button onclick="exportDataBackup()" class="px-2.5 py-1.5 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-slate-700 text-xs font-semibold flex items-center gap-1 transition-all" title="下載備份檔">
           <i class="fa-solid fa-download text-pink-500"></i>
@@ -307,6 +312,45 @@
 
   </main>
 
+
+  <!-- 雲端同步設定視窗 -->
+  <div id="cloud-sync-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4" onclick="if(event.target===this) closeSyncModal()">
+    <div class="bg-white rounded-3xl shadow-2xl border border-rose-100 max-w-md w-full p-5 sm:p-6">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center">
+            <i class="fa-solid fa-cloud"></i>
+          </div>
+          <h3 class="font-extrabold text-slate-800 text-base">跨裝置雲端同步 (GitHub Gist)</h3>
+        </div>
+        <button onclick="closeSyncModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <p class="text-xs text-slate-500 mb-4 leading-relaxed">
+        網址已保持乾淨！只要在此裝置輸入一次您的 GitHub Token（含 <code class="bg-slate-100 px-1 rounded">gist</code> 權限），之後每次新增/取消星號都會自動同步至您的私人 Gist，換手機或電腦開啟也能自動同步。
+      </p>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Gist ID（已為您預設好）</label>
+          <input id="sync-gist-id" type="text" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-mono focus:outline-none focus:border-sky-400" placeholder="例如 730983e375e2b7f5cecc74e3df9377dc">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">GitHub Token（僅存於本機瀏覽器，不會上傳至公開網頁）</label>
+          <input id="sync-github-token" type="password" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-mono focus:outline-none focus:border-sky-400" placeholder="ghp_...">
+        </div>
+        <div id="sync-modal-status" class="text-[11px] text-slate-500 bg-slate-50 rounded-xl p-2.5 border border-slate-100"></div>
+      </div>
+      <div class="flex items-center justify-end gap-2 mt-5">
+        <button onclick="manualPullFromCloud()" class="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold">
+          <i class="fa-solid fa-cloud-arrow-down mr-1 text-sky-500"></i>立即拉取
+        </button>
+        <button onclick="saveSyncSettings()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600 text-white text-xs font-bold shadow-sm">
+          <i class="fa-solid fa-cloud-arrow-up mr-1"></i>儲存並同步
+        </button>
+      </div>
+    </div>
+  </div>
 
   <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-md text-white text-xs px-5 py-2.5 rounded-full shadow-2xl opacity-0 transition-opacity pointer-events-none z-50 flex items-center gap-2"></div>
 
@@ -1395,7 +1439,9 @@
     ];
 
     // ===== 全域狀態 =====
-    const DEFAULT_STARS = [53,56,57,65,68,74,75,81,82,83,84,85,86,87,90,92,94,95,97,100,101,109,110,133,151,155,156,159,163,164,167,168,172];
+    const DEFAULT_STARS = [53,56,57,65,68,74,75,81,82,83,84,85,86,87,90,92,94,95,97,100,101,109,110,133,151,155,156,159,163,164,167,168,172,328,329,330,331,332,333,336,337,338,340,342,344,345,346,347,348,350,351,353,354,360,361,365,374,375,378,380,381,382,383,385,386,387,388,390,392,394,396,397,398,402,403,404,405,407,408,411,412,413,415,417,419,420,421,422,423,424,428,429,430,433,437,438,439,441,443,444,446,450];
+    const DEFAULT_GIST_ID = '730983e375e2b7f5cecc74e3df9377dc';
+    const GIST_FILENAME = 'toeic_sync.json';
     let currentLevel = 400; // 400, 600, 800, 990
     let currentPart = 1;
     let currentList = [];
@@ -1481,38 +1527,210 @@
       return null;
     }
 
-    // 將收藏即時同步到 URL Hash
-    function syncStarsToURLHash() {
+    // 清除網址列上的 #stars= 參數，保持網址乾淨
+    function cleanURLHash() {
       try {
-        const arr = Array.from(starredSet).sort((a,b) => a - b);
-        if (arr.length > 0) {
-          const newHash = `stars=${arr.join(',')}`;
-          history.replaceState(null, '', `#${newHash}`);
-        } else {
+        if (window.location.hash && window.location.hash.includes('stars=')) {
           history.replaceState(null, '', window.location.pathname + window.location.search);
         }
       } catch(e) {}
     }
 
-    // 整合式全自動載入（包含星號收藏與已讀進度）
+    // 雲端同步設定與狀態管理
+    let cloudSyncTimer = null;
+
+    function getCloudConfig() {
+      return {
+        gistId: (localStorage.getItem('toeic_gist_id') || DEFAULT_GIST_ID).trim(),
+        token: (localStorage.getItem('toeic_sync_token') || '').trim(),
+        updatedAt: parseInt(localStorage.getItem('toeic_sync_updated_at') || '0', 10) || 0
+      };
+    }
+
+    function updateSyncBadge(text, state = 'ok') {
+      const badge = document.getElementById('sync-status-badge');
+      if (!badge) return;
+      const styles = {
+        ok: { dot: 'bg-emerald-500', cls: 'text-emerald-600 bg-emerald-50 border-emerald-200 hover:bg-emerald-100' },
+        syncing: { dot: 'bg-amber-500 animate-pulse', cls: 'text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100' },
+        local: { dot: 'bg-sky-500', cls: 'text-sky-700 bg-sky-50 border-sky-200 hover:bg-sky-100' },
+        error: { dot: 'bg-rose-500', cls: 'text-rose-700 bg-rose-50 border-rose-200 hover:bg-rose-100' }
+      }[state] || { dot: 'bg-emerald-500', cls: 'text-emerald-600 bg-emerald-50 border-emerald-200' };
+
+      badge.className = `inline-flex items-center gap-1 text-[11px] font-semibold border px-2 py-0.5 rounded-full transition-colors cursor-pointer ${styles.cls}`;
+      badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${styles.dot}"></span><span>${text}</span>`;
+    }
+
+    async function syncFromCloud(forceApply = false) {
+      const { gistId, token, updatedAt: localUpdatedAt } = getCloudConfig();
+      if (!gistId) return false;
+      try {
+        const headers = { Accept: 'application/vnd.github+json' };
+        if (token) headers.Authorization = `Bearer ${token}`;
+        const res = await fetch(`https://api.github.com/gists/${gistId}?t=${Date.now()}`, { headers, cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const gist = await res.json();
+        const file = gist.files && gist.files[GIST_FILENAME];
+        if (!file || !file.content) return false;
+        const cloud = JSON.parse(file.content);
+        const cloudUpdatedAt = Number(cloud.updated_at) || 0;
+
+        if (forceApply || cloudUpdatedAt > localUpdatedAt || localUpdatedAt === 0) {
+          if (Array.isArray(cloud.starred_ids)) {
+            starredSet = new Set(cloud.starred_ids);
+          }
+          if (Array.isArray(cloud.read_parts)) {
+            readPartsSet = new Set(cloud.read_parts);
+          }
+          localStorage.setItem('toeic_sync_updated_at', String(cloudUpdatedAt || Date.now()));
+          saveLocalOnly();
+          updateSyncBadge(token ? '☁️ 已從雲端同步' : '☁️ 已載入雲端（點此設定寫入）', token ? 'ok' : 'local');
+          return true;
+        } else if (localUpdatedAt > cloudUpdatedAt && token) {
+          await syncToCloud();
+        } else {
+          updateSyncBadge(token ? '☁️ 雲端已同步' : '本機已存檔（點此設定雲端）', token ? 'ok' : 'local');
+        }
+      } catch (err) {
+        updateSyncBadge('本機已存檔（雲端離線）', 'local');
+      }
+      return false;
+    }
+
+    async function syncToCloud() {
+      const { gistId, token } = getCloudConfig();
+      if (!gistId || !token) {
+        updateSyncBadge('本機已存檔（點此設定雲端）', 'local');
+        return false;
+      }
+      updateSyncBadge('☁️ 雲端同步中...', 'syncing');
+      try {
+        const now = Date.now();
+        localStorage.setItem('toeic_sync_updated_at', String(now));
+        const content = JSON.stringify({
+          starred_ids: Array.from(starredSet).sort((a, b) => a - b),
+          read_parts: Array.from(readPartsSet),
+          updated_at: now
+        });
+        const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            files: {
+              [GIST_FILENAME]: { content }
+            }
+          })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        updateSyncBadge('☁️ 已同步至雲端', 'ok');
+        return true;
+      } catch (err) {
+        updateSyncBadge('☁️ 同步失敗（請檢查 Token）', 'error');
+        return false;
+      }
+    }
+
+    function scheduleCloudSync() {
+      const { token } = getCloudConfig();
+      if (!token) {
+        updateSyncBadge('本機已存檔（點此設定雲端）', 'local');
+        return;
+      }
+      updateSyncBadge('☁️ 準備同步...', 'syncing');
+      if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
+      cloudSyncTimer = setTimeout(() => { syncToCloud(); }, 600);
+    }
+
+    function openSyncModal() {
+      const modal = document.getElementById('cloud-sync-modal');
+      if (!modal) return;
+      const { gistId, token, updatedAt } = getCloudConfig();
+      document.getElementById('sync-gist-id').value = gistId;
+      document.getElementById('sync-github-token').value = token;
+      const statusEl = document.getElementById('sync-modal-status');
+      const timeStr = updatedAt ? new Date(updatedAt).toLocaleString() : '尚未同步';
+      statusEl.textContent = token
+        ? `目前狀態：已設定 Token，最後更新時間：${timeStr}`
+        : `目前狀態：尚未設定 Token（僅能讀取雲端預設進度，設定後即可雙向同步）`;
+      modal.classList.remove('hidden');
+    }
+
+    function closeSyncModal() {
+      const modal = document.getElementById('cloud-sync-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function saveSyncSettings() {
+      const gistId = document.getElementById('sync-gist-id').value.trim() || DEFAULT_GIST_ID;
+      const token = document.getElementById('sync-github-token').value.trim();
+      localStorage.setItem('toeic_gist_id', gistId);
+      if (token) {
+        localStorage.setItem('toeic_sync_token', token);
+      } else {
+        localStorage.removeItem('toeic_sync_token');
+      }
+      const ok = await syncToCloud();
+      if (ok) {
+        showToast('☁️ 雲端同步設定完成並已上傳！');
+        closeSyncModal();
+      } else if (!token) {
+        await syncFromCloud(true);
+        renderLevelButtons();
+        renderPartButtons();
+        updateCardUI();
+        showToast('已儲存 Gist ID 並從雲端載入');
+        closeSyncModal();
+      } else {
+        showToast('⚠️ 同步失敗，請確認 Token 是否有 gist 權限');
+      }
+    }
+
+    async function manualPullFromCloud() {
+      const gistId = document.getElementById('sync-gist-id').value.trim() || DEFAULT_GIST_ID;
+      localStorage.setItem('toeic_gist_id', gistId);
+      const token = document.getElementById('sync-github-token').value.trim();
+      if (token) localStorage.setItem('toeic_sync_token', token);
+      const ok = await syncFromCloud(true);
+      if (ok) {
+        renderLevelButtons();
+        renderPartButtons();
+        updateCardUI();
+        showToast('☁️ 已從雲端拉取最新進度！');
+        closeSyncModal();
+      } else {
+        showToast('⚠️ 無法讀取雲端資料，請檢查 Gist ID');
+      }
+    }
+
+    function saveLocalOnly() {
+      const starArr = Array.from(starredSet);
+      const starJson = JSON.stringify(starArr);
+      try {
+        localStorage.setItem('toeic_starred', starJson);
+        localStorage.setItem('toeic400_starred', starJson);
+        localStorage.setItem('toeic_read_parts', JSON.stringify(Array.from(readPartsSet)));
+      } catch(e) {}
+      writeToIDB('starred_ids', starArr);
+      writeToIDB('read_parts', Array.from(readPartsSet));
+      try { setCookie('toeic400_starred', starJson, 365); } catch(e) {}
+      updateStarredBadge();
+    }
+
+    // 整合式全自動載入（本機優先防覆蓋 + 雲端 Gist 同步 + 保持網址乾淨）
     async function loadAllSavedData() {
       let restoredIds = null;
 
-      // 1. 檢查 URL Hash
-      const urlIds = readStarsFromURLHash();
-      if (urlIds && urlIds.length > 0) {
-        restoredIds = urlIds;
+      // 1. 優先檢查 IndexedDB
+      const idbData = await readFromIDB('starred_ids');
+      if (Array.isArray(idbData) && idbData.length > 0) {
+        restoredIds = idbData;
       }
 
-      // 2. 檢查 IndexedDB
-      if (!restoredIds) {
-        const idbData = await readFromIDB('starred_ids');
-        if (Array.isArray(idbData) && idbData.length > 0) {
-          restoredIds = idbData;
-        }
-      }
-
-      // 3. 檢查 LocalStorage
+      // 2. 檢查 LocalStorage
       if (!restoredIds) {
         try {
           const lsData = localStorage.getItem('toeic_starred') || localStorage.getItem('toeic400_starred');
@@ -1523,7 +1741,7 @@
         } catch(e) {}
       }
 
-      // 4. 檢查 Cookie
+      // 3. 檢查 Cookie
       if (!restoredIds) {
         try {
           const cookieVal = getCookie('toeic400_starred');
@@ -1533,6 +1751,15 @@
           }
         } catch(e) {}
       }
+
+      // 4. 若本機全無資料，才參考 URL Hash 並立即清除網址尾巴
+      if (!restoredIds) {
+        const urlIds = readStarsFromURLHash();
+        if (urlIds && urlIds.length > 0) {
+          restoredIds = urlIds;
+        }
+      }
+      cleanURLHash();
 
       if (restoredIds) {
         starredSet = new Set(restoredIds);
@@ -1557,41 +1784,24 @@
       // 預設將 400-1 標記為已讀
       markPartAsRead(400, 1);
 
-      // 自動將當前狀態同步回所有層次
-      saveStarsAutomatically(false);
-      updateStarredBadge();
+      saveLocalOnly();
+      await syncFromCloud(false);
     }
 
-    // 全自動背景儲存收藏
+    // 全自動背景儲存收藏（本機 + 雲端）
     function saveStarsAutomatically(showFeedback = true) {
-      const arr = Array.from(starredSet);
-      const jsonStr = JSON.stringify(arr);
-
-      try {
-        localStorage.setItem('toeic_starred', jsonStr);
-        localStorage.setItem('toeic400_starred', jsonStr);
-      } catch(e) {}
-
-      writeToIDB('starred_ids', arr);
-      syncStarsToURLHash();
-
-      try { setCookie('toeic400_starred', jsonStr, 365); } catch(e) {}
-
-      updateStarredBadge();
-
-      const badge = document.getElementById('sync-status-badge');
-      if (badge && showFeedback) {
-        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span>已即時自動存檔</span>`;
+      localStorage.setItem('toeic_sync_updated_at', String(Date.now()));
+      saveLocalOnly();
+      if (showFeedback) {
+        scheduleCloudSync();
       }
     }
 
     // 全自動儲存「已讀單元」進度
     function saveReadPartsAutomatically() {
-      const arr = Array.from(readPartsSet);
-      try {
-        localStorage.setItem('toeic_read_parts', JSON.stringify(arr));
-      } catch(e) {}
-      writeToIDB('read_parts', arr);
+      localStorage.setItem('toeic_sync_updated_at', String(Date.now()));
+      saveLocalOnly();
+      scheduleCloudSync();
     }
 
     // Cookie 輔助工具
