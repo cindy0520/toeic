@@ -242,12 +242,12 @@
             <div class="flex items-center justify-between">
               <span id="card-pos-front" class="px-3 py-1 rounded-full bg-pink-100 text-pink-700 text-xs font-extrabold uppercase tracking-wider">noun</span>
               <div class="flex items-center gap-1 -mr-2">
-                <!-- 愛心按鈕 (點擊或按 Shift 收藏一直記不住的單字) -->
-                <button onclick="event.stopPropagation(); toggleCurrentCardHeart();" class="p-2 text-2xl sm:text-3xl transition-transform active:scale-125 focus:outline-none" title="一直記不住 / 取消愛心 (Shift)">
+                <!-- 愛心按鈕 (點擊或按 Enter 收藏一直記不住的單字) -->
+                <button onclick="event.stopPropagation(); toggleCurrentCardHeart();" class="p-2 text-2xl sm:text-3xl transition-transform active:scale-125 focus:outline-none" title="一直記不住 / 取消愛心 (Enter)">
                   <i id="card-heart-icon" class="fa-regular fa-heart text-slate-300 hover:text-sky-400"></i>
                 </button>
-                <!-- 星號按鈕 (點擊或按 Enter 收藏) -->
-                <button onclick="event.stopPropagation(); toggleCurrentCardStar();" class="p-2 text-3xl transition-transform active:scale-125 focus:outline-none" title="加入/取消收藏 (Enter)">
+                <!-- 星號按鈕 (點擊或按 Shift 收藏) -->
+                <button onclick="event.stopPropagation(); toggleCurrentCardStar();" class="p-2 text-3xl transition-transform active:scale-125 focus:outline-none" title="加入/取消收藏 (Shift)">
                   <i id="card-star-icon" class="fa-regular fa-star text-slate-300 hover:text-amber-400"></i>
                 </button>
               </div>
@@ -266,8 +266,8 @@
               <span class="inline-flex flex-wrap items-center justify-center gap-1.5 bg-pink-50/70 px-3 py-1 rounded-full border border-pink-100">
                 <i class="fa-solid fa-keyboard text-pink-400"></i>
                 <span class="font-bold text-slate-700">Space</span> 翻面・
-                <span class="font-bold text-slate-700">Enter</span> 收藏 ⭐・
-                <span class="font-bold text-slate-700">Shift</span> 愛心 💙・
+                <span class="font-bold text-slate-700">Enter</span> 愛心 💙・
+                <span class="font-bold text-slate-700">Shift</span> 收藏 ⭐・
                 <span class="font-bold text-slate-700">← →</span> 切換
               </span>
             </div>
@@ -281,10 +281,10 @@
                 <span id="card-pos-back" class="text-xs text-slate-400 font-mono">(n.)</span>
               </div>
               <div class="flex items-center gap-1 -mr-2">
-                <button onclick="event.stopPropagation(); toggleCurrentCardHeart();" class="p-2 text-2xl sm:text-3xl transition-transform active:scale-125 focus:outline-none" title="一直記不住 / 取消愛心 (Shift)">
+                <button onclick="event.stopPropagation(); toggleCurrentCardHeart();" class="p-2 text-2xl sm:text-3xl transition-transform active:scale-125 focus:outline-none" title="一直記不住 / 取消愛心 (Enter)">
                   <i id="card-heart-icon-back" class="fa-regular fa-heart text-slate-600 hover:text-sky-400"></i>
                 </button>
-                <button onclick="event.stopPropagation(); toggleCurrentCardStar();" class="p-2 text-3xl transition-transform active:scale-125 focus:outline-none" title="加入/取消收藏 (Enter)">
+                <button onclick="event.stopPropagation(); toggleCurrentCardStar();" class="p-2 text-3xl transition-transform active:scale-125 focus:outline-none" title="加入/取消收藏 (Shift)">
                   <i id="card-star-icon-back" class="fa-regular fa-star text-slate-600 hover:text-amber-400"></i>
                 </button>
               </div>
@@ -313,8 +313,8 @@
               <span class="inline-flex flex-wrap items-center justify-center gap-1.5 bg-slate-800/90 px-3 py-1 rounded-full border border-slate-700">
                 <i class="fa-solid fa-keyboard text-pink-400"></i>
                 <span class="font-bold text-pink-300">Space</span> 翻回正面・
-                <span class="font-bold text-pink-300">Enter</span> 收藏 ⭐・
-                <span class="font-bold text-pink-300">Shift</span> 愛心 💙・
+                <span class="font-bold text-pink-300">Enter</span> 愛心 💙・
+                <span class="font-bold text-pink-300">Shift</span> 收藏 ⭐・
                 <span class="font-bold text-pink-300">← →</span> 切換
               </span>
             </div>
@@ -2974,10 +2974,10 @@
         flipCard();
       } else if (e.key === 'Enter' || e.code === 'Enter' || e.keyCode === 13) {
         e.preventDefault();
-        toggleCurrentCardStar();
+        toggleCurrentCardHeart();
       } else if (e.key === 'Shift' && !e.repeat) {
         e.preventDefault();
-        toggleCurrentCardHeart();
+        toggleCurrentCardStar();
       }
     });
 
