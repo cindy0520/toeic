@@ -106,6 +106,12 @@
           <span id="header-star-filter-label">本單元錯題</span>
           <span id="starred-badge" class="ml-0.5 bg-amber-400 text-white text-[11px] px-1.5 py-0.2 rounded-full font-black shadow-xs">0</span>
         </button>
+
+        <button id="btn-p5-star-filter" onclick="togglePart5StarredHeader()" class="hidden relative px-3 sm:px-4 py-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all cursor-pointer" title="篩選選擇題錯題收藏">
+          <i id="header-p5-star-icon" class="fa-solid fa-star text-amber-400 text-sm"></i>
+          <span id="header-p5-star-label">選擇題錯題</span>
+          <span id="header-p5-starred-badge" class="ml-0.5 bg-amber-400 text-white text-[11px] px-1.5 py-0.2 rounded-full font-black shadow-xs">0</span>
+        </button>
       </div>
     </div>
   </header>
@@ -3150,6 +3156,7 @@
   <script>
     // ===== 多益閱讀 Part 5 單句填空控制邏輯（支援題號跳題、錯題收藏、刷新保留進度） =====
     let p5Category = 'all';
+    let p5LastNonStarCat = 'all';
     let p5List = [];
     let p5Index = 0;
     let p5Score = 0;
@@ -3186,6 +3193,35 @@
     function updatePart5StarCount() {
       const el = document.getElementById('p5-starred-count');
       if (el) el.innerText = p5StarredSet.size;
+      const headerBadge = document.getElementById('header-p5-starred-badge');
+      if (headerBadge) headerBadge.innerText = p5StarredSet.size;
+    }
+
+    function updatePart5HeaderStarButton() {
+      const btn = document.getElementById('btn-p5-star-filter');
+      const icon = document.getElementById('header-p5-star-icon');
+      const label = document.getElementById('header-p5-star-label');
+      const badge = document.getElementById('header-p5-starred-badge');
+      if (!btn || !icon || !label || !badge) return;
+      if (p5Category === 'starred') {
+        btn.className = 'relative px-3 sm:px-4 py-1.5 rounded-xl border border-amber-500 bg-amber-400 hover:bg-amber-500 text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer';
+        icon.className = 'fa-solid fa-star text-white text-sm';
+        label.innerText = '返回題庫';
+        badge.className = 'ml-0.5 bg-white text-amber-600 text-[11px] px-1.5 py-0.2 rounded-full font-black shadow-xs';
+      } else {
+        btn.className = 'relative px-3 sm:px-4 py-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all cursor-pointer';
+        icon.className = 'fa-solid fa-star text-amber-400 text-sm';
+        label.innerText = '選擇題錯題';
+        badge.className = 'ml-0.5 bg-amber-400 text-white text-[11px] px-1.5 py-0.2 rounded-full font-black shadow-xs';
+      }
+    }
+
+    function togglePart5StarredHeader() {
+      if (p5Category === 'starred') {
+        openPart5(p5LastNonStarCat || 'all', null, true);
+      } else {
+        openPart5('starred', null, true);
+      }
     }
 
     function updatePart5StarUI(qId) {
@@ -3239,6 +3275,9 @@
       const vocabNav = document.getElementById('drawer-nav-vocab');
       const vocabBadge = document.getElementById('drawer-badge-vocab');
       const titleEl = document.getElementById('app-main-title');
+      const heartBtn = document.getElementById('btn-heart-filter');
+      const starBtn = document.getElementById('btn-star-filter');
+      const p5StarBtn = document.getElementById('btn-p5-star-filter');
 
       try { localStorage.setItem('toeic_app_page', page); } catch(e) {}
 
@@ -3248,12 +3287,20 @@
         if (titleEl) titleEl.innerText = '多益閱讀 Part 5 單句填空';
         if (vocabNav) vocabNav.className = 'w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-rose-50/70 hover:bg-rose-100/70 text-slate-700 font-bold text-sm cursor-pointer';
         if (vocabBadge) vocabBadge.classList.add('hidden');
+        if (heartBtn) heartBtn.classList.add('hidden');
+        if (starBtn) starBtn.classList.add('hidden');
+        if (p5StarBtn) p5StarBtn.classList.remove('hidden');
+        updatePart5StarCount();
+        updatePart5HeaderStarButton();
       } else {
         part5Page.classList.add('hidden');
         vocabPage.classList.remove('hidden');
         if (titleEl) titleEl.innerText = `多益衝${currentLevel}分單字卡`;
         if (vocabNav) vocabNav.className = 'w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-400 text-white font-bold text-sm shadow-sm cursor-pointer';
         if (vocabBadge) vocabBadge.classList.remove('hidden');
+        if (heartBtn) heartBtn.classList.remove('hidden');
+        if (starBtn) starBtn.classList.remove('hidden');
+        if (p5StarBtn) p5StarBtn.classList.add('hidden');
       }
       toggleSidebar(false);
     }
@@ -3283,9 +3330,13 @@
         }
       }
 
+      if (category !== 'starred') {
+        p5LastNonStarCat = category;
+      }
       p5Category = category;
       switchAppPage('part5');
       updatePart5StarCount();
+      updatePart5HeaderStarButton();
 
       document.querySelectorAll('.p5-cat-btn').forEach(btn => {
         if (btn.id === 'p5-cat-starred') {
