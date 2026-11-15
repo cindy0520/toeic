@@ -85,6 +85,21 @@
       tpl: (w) => `Customer retention rates have ------- improved since the launch of our loyalty program.`,
       zh: (w) => `自從推出會員忠誠計畫以來，顧客留存率已${w.advZh}提升。`,
       exp: (w) => `空格位於助動詞 have 與過去分詞 improved 之間，需填入副詞 ${w.adv}（${w.advZh}）。`
+    },
+    {
+      tpl: (w) => `All regional managers are expected to review expense reports ------- before submitting them to headquarters.`,
+      zh: (w) => `所有區域經理在將費用報告提交總部前，都應${w.advZh}審閱。`,
+      exp: (w) => `空格修飾動詞 review（審閱），需填入副詞 ${w.adv}（${w.advZh}）。`
+    },
+    {
+      tpl: (w) => `The newly installed automation software operates ------- across all three distribution centers.`,
+      zh: (w) => `新安裝的自動化軟體在所有三個配送中心皆${w.advZh}運作。`,
+      exp: (w) => `空格修飾不及物動詞 operates，需使用副詞 ${w.adv}（${w.advZh}）。`
+    },
+    {
+      tpl: (w) => `Our legal team has ------- revised the vendor agreement to reflect updated privacy laws.`,
+      zh: (w) => `我們的法務團隊已${w.advZh}修訂供應商協議，以符合最新的隱私法規。`,
+      exp: (w) => `空格位於助動詞 has 與過去分詞 revised 之間，應填入副詞 ${w.adv}（${w.advZh}）。`
     }
   ];
 
@@ -103,6 +118,21 @@
       tpl: (w) => `Clients found the new enterprise platform remarkably ------- and easy to navigate.`,
       zh: (w) => `客戶發現新的企業平台極為${w.adjZh}且易於操作。`,
       exp: (w) => `「find + 受詞 + 形容詞補語」為多益高頻句型，副詞 remarkably 後方需接形容詞 ${w.adj}（${w.adjZh}）。`
+    },
+    {
+      tpl: (w) => `Several board members raised concerns about the ------- impact of the proposed tariff hike.`,
+      zh: (w) => `幾位董事會成員對擬議調高關稅可能帶來的${w.adjZh}影響表達了關切。`,
+      exp: (w) => `定冠詞 the 與名詞 impact 之間需填入形容詞，故選 ${w.adj}（${w.adjZh}）。`
+    },
+    {
+      tpl: (w) => `To stay ahead of competitors, our R&D department fosters a highly ------- work culture.`,
+      zh: (w) => `為保持領先競爭對手，我們的研發部門培養了高度${w.adjZh}工作文化。`,
+      exp: (w) => `副詞 highly 後方與名詞 work culture 之間需填入形容詞 ${w.adj}（${w.adjZh}）。`
+    },
+    {
+      tpl: (w) => `Under the revised contract, all delivery schedules remain ------- subject to mutual written consent.`,
+      zh: (w) => `根據修訂後的合約，所有交貨時程經雙方書面同意後皆維持為${w.adjZh}狀態。`,
+      exp: (w) => `連綴動詞 remain 後方需要形容詞作主詞補語，故選 ${w.adj}（${w.adjZh}）。`
     }
   ];
 
@@ -110,22 +140,34 @@
     const pool = [];
     POS_FAMILIES.forEach((w, wi) => {
       POS_NOUN_FRAMES.forEach((f, fi) => {
-        pool.push(() => makeQuestion(
-          `pos_n_${wi}_${fi}`, "詞性辨析", fi % 2 === 0 ? "800分" : "990分",
-          f.tpl(w), [w.n, w.v, w.adj, w.adv], f.zh(w), f.exp(w)
-        ));
+        pool.push({
+          frameKey: `pos_n_${fi}`,
+          wordKey: `pos_w_${wi}`,
+          fn: () => makeQuestion(
+            `pos_n_${wi}_${fi}`, "詞性辨析", fi % 2 === 0 ? "800分" : "990分",
+            f.tpl(w), [w.n, w.v, w.adj, w.adv], f.zh(w), f.exp(w)
+          )
+        });
       });
       POS_ADV_FRAMES.forEach((f, fi) => {
-        pool.push(() => makeQuestion(
-          `pos_adv_${wi}_${fi}`, "詞性辨析", fi % 2 === 0 ? "800分" : "990分",
-          f.tpl(w), [w.adv, w.v, w.n, w.adj], f.zh(w), f.exp(w)
-        ));
+        pool.push({
+          frameKey: `pos_adv_${fi}`,
+          wordKey: `pos_w_${wi}`,
+          fn: () => makeQuestion(
+            `pos_adv_${wi}_${fi}`, "詞性辨析", fi % 2 === 0 ? "800分" : "990分",
+            f.tpl(w), [w.adv, w.v, w.n, w.adj], f.zh(w), f.exp(w)
+          )
+        });
       });
       POS_ADJ_FRAMES.forEach((f, fi) => {
-        pool.push(() => makeQuestion(
-          `pos_adj_${wi}_${fi}`, "詞性辨析", fi % 2 === 0 ? "800分" : "990分",
-          f.tpl(w), [w.adj, w.v, w.n, w.adv], f.zh(w), f.exp(w)
-        ));
+        pool.push({
+          frameKey: `pos_adj_${fi}`,
+          wordKey: `pos_w_${wi}`,
+          fn: () => makeQuestion(
+            `pos_adj_${wi}_${fi}`, "詞性辨析", fi % 2 === 0 ? "800分" : "990分",
+            f.tpl(w), [w.adj, w.v, w.n, w.adv], f.zh(w), f.exp(w)
+          )
+        });
       });
     });
     return pool;
@@ -201,6 +243,34 @@
       opts: (s) => ["Should", "Had", "Were", "Did"],
       zh: (s) => `萬一${s.subjZh}未能準時完成${s.objZh}，請立即通知營運副總裁。`,
       exp: (s) => `句型為省略 if 的未來條件倒裝「Should + 主詞 + 原形動詞 fail」，表示「萬一…」。`
+    },
+    {
+      id: "participle_past", level: "800分",
+      tpl: (s) => `Any errors found in ${s.obj} ------- by ${s.subj} will be corrected in the next release.`,
+      opts: (s) => [s.pp, s.v, s.ing, s.vs],
+      zh: (s) => `在${s.subjZh}處理的${s.objZh}中所發現的任何錯誤，都將於下一版更正。`,
+      exp: (s) => `空格為修飾名詞的被動分詞片語，因為後方有 by ${s.subj}，故選過去分詞 ${s.pp}。`
+    },
+    {
+      id: "by_the_time", level: "990分",
+      tpl: (s) => `By the time the external auditors arrived, ${s.subj} ------- ${s.obj}.`,
+      opts: (s) => [`had ${s.pp}`, s.vs, `will ${s.v}`, s.ing],
+      zh: (s) => `當外部稽核人員抵達時，${s.subjZh}早已完成了${s.objZh}。`,
+      exp: (s) => `「By the time + 過去式」表示在過去某個時間點之前動作已完成，主句應選過去完成式 had ${s.pp}。`
+    },
+    {
+      id: "currently_prog", level: "800分",
+      tpl: (s) => `At the moment, ${s.subj} ------- ${s.obj} to prepare for next week's board review.`,
+      opts: (s) => [`is ${s.ing}`, s.past, `had ${s.pp}`, `will ${s.v}`],
+      zh: (s) => `目前，${s.subjZh}正在處理${s.objZh}，為下週的董事會審查做準備。`,
+      exp: (s) => `句首出現「At the moment（目前此刻）」，搭配單數主詞應選現在進行式 is ${s.ing}。`
+    },
+    {
+      id: "recommend_sub", level: "990分",
+      tpl: (s) => `The advisory panel recommended that ${s.obj} ------- without further delay.`,
+      opts: (s) => [`be ${s.pp}`, `was ${s.pp}`, `is ${s.pp}`, s.pp],
+      zh: (s) => `顧問小組建議${s.objZh}應立即處理，不得再延誤。`,
+      exp: (s) => `動詞 recommended 後接 that 子句需用假設語氣「(should) + 原形動詞」，被動語態選 be ${s.pp}。`
     }
   ];
 
@@ -208,10 +278,14 @@
     const pool = [];
     TENSE_SCENARIOS.forEach((s, si) => {
       TENSE_PATTERNS.forEach((p, pi) => {
-        pool.push(() => makeQuestion(
-          `tense_${si}_${pi}`, "時態與語態", p.level,
-          p.tpl(s), p.opts(s), p.zh(s), p.exp(s)
-        ));
+        pool.push({
+          frameKey: `tense_p_${p.id}`,
+          wordKey: `tense_s_${si}`,
+          fn: () => makeQuestion(
+            `tense_${si}_${pi}`, "時態與語態", p.level,
+            p.tpl(s), p.opts(s), p.zh(s), p.exp(s)
+          )
+        });
       });
     });
     return pool;
@@ -362,10 +436,14 @@
   ];
 
   function buildPrepConjPool() {
-    return PREP_CONJ_ITEMS.map((item, idx) => () => makeQuestion(
-      `pc_${idx}`, "介係詞與連接詞", item.level,
-      item.s, item.opts, item.zh, item.exp
-    ));
+    return PREP_CONJ_ITEMS.map((item, idx) => ({
+      frameKey: `pc_${idx}`,
+      wordKey: `pc_w_${idx}`,
+      fn: () => makeQuestion(
+        `pc_${idx}`, "介係詞與連接詞", item.level,
+        item.s, item.opts, item.zh, item.exp
+      )
+    }));
   }
 
   // ===== 4. 字彙與搭配 (Vocabulary & Collocations) 生成池 =====
@@ -541,10 +619,14 @@
   ];
 
   function buildVocabPool() {
-    return VOCAB_BANK.map((item, idx) => () => makeQuestion(
-      `voc_${idx}`, "字彙與搭配", item.level,
-      item.s, item.opts, item.zh, item.exp
-    ));
+    return VOCAB_BANK.map((item, idx) => ({
+      frameKey: `voc_${idx}`,
+      wordKey: `voc_w_${idx}`,
+      fn: () => makeQuestion(
+        `voc_${idx}`, "字彙與搭配", item.level,
+        item.s, item.opts, item.zh, item.exp
+      )
+    }));
   }
 
   const POOLS = {
@@ -575,31 +657,56 @@
     } catch(e) {}
   }
 
-  // 生成指定數量且不與過去重複的全新 Part 5 題目
+  function pickUniqueBatch(candidates, limit, usedFrames, usedWords, picked) {
+    for (const item of shuffle(candidates)) {
+      if (picked.length >= limit) break;
+      if (usedFrames.has(item.frameKey)) continue;
+      if (item.wordKey && usedWords.has(item.wordKey)) continue;
+      usedFrames.add(item.frameKey);
+      if (item.wordKey) usedWords.add(item.wordKey);
+      picked.push(item);
+    }
+  }
+
+  // 生成指定數量且同批句型、單字皆不重複的全新 Part 5 題目
   global.generatePart5Batch = function(category, count) {
     const builders = category === 'all'
       ? [
-          ...POOLS["詞性辨析"].map((fn, i) => ({ key: `詞性辨析_${i}`, fn })),
-          ...POOLS["時態與語態"].map((fn, i) => ({ key: `時態與語態_${i}`, fn })),
-          ...POOLS["介係詞與連接詞"].map((fn, i) => ({ key: `介係詞與連接詞_${i}`, fn })),
-          ...POOLS["字彙與搭配"].map((fn, i) => ({ key: `字彙與搭配_${i}`, fn }))
+          ...POOLS["詞性辨析"].map((b, i) => ({ ...b, key: `詞性辨析_${i}` })),
+          ...POOLS["時態與語態"].map((b, i) => ({ ...b, key: `時態與語態_${i}` })),
+          ...POOLS["介係詞與連接詞"].map((b, i) => ({ ...b, key: `介係詞與連接詞_${i}` })),
+          ...POOLS["字彙與搭配"].map((b, i) => ({ ...b, key: `字彙與搭配_${i}` }))
         ]
-      : (POOLS[category] || []).map((fn, i) => ({ key: `${category}_${i}`, fn }));
+      : (POOLS[category] || []).map((b, i) => ({ ...b, key: `${category}_${i}` }));
 
     if (builders.length === 0) return [];
 
     const seen = loadSeen(category);
-    let available = builders.filter(b => !seen.has(b.key));
-    let picked = [];
+    const available = builders.filter(b => !seen.has(b.key));
+    const picked = [];
+    const usedFrames = new Set();
+    const usedWords = new Set();
 
-    if (available.length >= count) {
-      picked = shuffle(available).slice(0, count);
-    } else {
-      picked = shuffle(available);
-      const pickedKeys = new Set(picked.map(p => p.key));
+    // 第一輪：優先從未看過的題目中挑選不同句型與不同字族
+    pickUniqueBatch(available, count, usedFrames, usedWords, picked);
+
+    // 若未看過的題目不足以湊滿不重複句型，重置已看紀錄再補齊（仍強制同批句型與字族不重複）
+    if (picked.length < count) {
       seen.clear();
-      const rest = shuffle(builders.filter(b => !pickedKeys.has(b.key)));
-      picked = picked.concat(rest.slice(0, count - picked.length));
+      const pickedKeys = new Set(picked.map(p => p.key));
+      const rest = builders.filter(b => !pickedKeys.has(b.key));
+      pickUniqueBatch(rest, count, usedFrames, usedWords, picked);
+    }
+
+    // 萬一某極端情況字族先用完，至少保證同批句型 (frameKey) 絕不重複
+    if (picked.length < count) {
+      const pickedKeys = new Set(picked.map(p => p.key));
+      for (const item of shuffle(builders.filter(b => !pickedKeys.has(b.key)))) {
+        if (picked.length >= count) break;
+        if (usedFrames.has(item.frameKey)) continue;
+        usedFrames.add(item.frameKey);
+        picked.push(item);
+      }
     }
 
     picked.forEach(p => seen.add(p.key));
