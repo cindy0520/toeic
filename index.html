@@ -518,7 +518,7 @@
     </div>
   </div>
 
-  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-md text-white text-xs px-5 py-2.5 rounded-full shadow-2xl opacity-0 transition-opacity pointer-events-none z-50 flex items-center gap-2"></div>
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-100/95 backdrop-blur-md text-slate-700 border border-slate-200/90 text-xs font-semibold px-5 py-2.5 rounded-full shadow-lg opacity-0 transition-opacity pointer-events-none z-50 flex items-center gap-2"></div>
 
   <script>
     // ===== 1,000 個完整多益必備單字資料庫 (400分 / 600分 / 800分 / 990分 各250字，每等級10單元) =====
@@ -3094,9 +3094,6 @@
       } else if (e.key === 'Enter' || e.code === 'Enter' || e.keyCode === 13) {
         e.preventDefault();
         toggleCurrentCardHeart();
-      } else if (e.key === 'Shift' && !e.repeat) {
-        e.preventDefault();
-        toggleCurrentCardStar();
       }
     });
 
@@ -3673,11 +3670,30 @@
       loadPart5Question();
     }
 
+    let p5SoloShiftArmed = false;
+
+    window.addEventListener('blur', () => {
+      p5SoloShiftArmed = false;
+    });
+
     window.addEventListener('keydown', (e) => {
+      // 只有單純按下 Shift（未搭配 Ctrl / Alt / Win / 截圖鍵等其他按鍵）才準備在放開時觸發收藏
+      if (e.key === 'Shift') {
+        if (!e.repeat && !e.ctrlKey && !e.altKey && !e.metaKey) {
+          p5SoloShiftArmed = true;
+        } else {
+          p5SoloShiftArmed = false;
+        }
+      } else {
+        p5SoloShiftArmed = false;
+      }
+
       const part5Page = document.getElementById('page-part5');
       if (!part5Page || part5Page.classList.contains('hidden')) return;
       const tag = document.activeElement.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+
       if (e.key === 'ArrowRight') {
         const nextBtn = document.getElementById('p5-next-btn');
         if (nextBtn && !nextBtn.classList.contains('hidden')) {
@@ -3689,9 +3705,30 @@
           e.preventDefault();
           jumpToPart5Question(p5Index - 1);
         }
-      } else if (e.key === 'Shift' && !e.repeat) {
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.key !== 'Shift') return;
+      const shouldTrigger = p5SoloShiftArmed && !e.ctrlKey && !e.altKey && !e.metaKey;
+      p5SoloShiftArmed = false;
+      if (!shouldTrigger) return;
+
+      const tag = document.activeElement.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+      const part5Page = document.getElementById('page-part5');
+      if (part5Page && !part5Page.classList.contains('hidden')) {
         e.preventDefault();
         toggleCurrentPart5Star();
+        return;
+      }
+
+      const vocabPage = document.getElementById('page-vocab');
+      const cardMode = document.getElementById('mode-flashcard');
+      if (vocabPage && !vocabPage.classList.contains('hidden') && cardMode && !cardMode.classList.contains('hidden')) {
+        e.preventDefault();
+        toggleCurrentCardStar();
       }
     });
   </script>
