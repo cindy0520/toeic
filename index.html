@@ -406,17 +406,35 @@
 
   <!-- 多益閱讀 Part 5 單句填空練習頁 -->
   <section id="page-part5" class="hidden max-w-4xl mx-auto px-4 py-5 w-full flex-1 flex flex-col">
-    <div class="mb-4 bg-white p-3 sm:p-4 rounded-3xl shadow-xs border border-rose-100 flex flex-wrap items-center justify-between gap-2">
+    <div class="mb-3 bg-white p-3 sm:p-4 rounded-3xl shadow-xs border border-rose-100 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2 flex-wrap">
         <button onclick="openPart5('all')" id="p5-cat-all" class="p5-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-pink-500 to-rose-400 text-white shadow-xs cursor-pointer">全部 (40題)</button>
         <button onclick="openPart5('詞性辨析')" id="p5-cat-詞性辨析" class="p5-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-50 text-slate-700 hover:bg-rose-100 border border-rose-100 cursor-pointer">詞性辨析</button>
         <button onclick="openPart5('時態與語態')" id="p5-cat-時態與語態" class="p5-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-50 text-slate-700 hover:bg-rose-100 border border-rose-100 cursor-pointer">時態與語態</button>
         <button onclick="openPart5('介係詞與連接詞')" id="p5-cat-介係詞與連接詞" class="p5-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-50 text-slate-700 hover:bg-rose-100 border border-rose-100 cursor-pointer">介係詞與連接詞</button>
         <button onclick="openPart5('字彙與搭配')" id="p5-cat-字彙與搭配" class="p5-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-50 text-slate-700 hover:bg-rose-100 border border-rose-100 cursor-pointer">字彙與搭配</button>
+        <button onclick="openPart5('starred')" id="p5-cat-starred" class="p5-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200 cursor-pointer flex items-center gap-1">
+          <i class="fa-solid fa-star text-amber-400"></i>
+          <span>錯題收藏 (<span id="p5-starred-count">0</span>)</span>
+        </button>
       </div>
-      <button onclick="switchAppPage('vocab')" class="px-3 py-1.5 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-slate-600 text-xs font-bold cursor-pointer">
-        <i class="fa-solid fa-arrow-left mr-1"></i>返回單字卡
-      </button>
+      <div class="flex items-center gap-2">
+        <button onclick="resetPart5Progress()" class="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 text-xs font-semibold cursor-pointer" title="清除本組作答進度並從第 1 題開始">
+          <i class="fa-solid fa-rotate-left mr-1"></i>重頭作答
+        </button>
+        <button onclick="switchAppPage('vocab')" class="px-3 py-1.5 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-slate-600 text-xs font-bold cursor-pointer">
+          <i class="fa-solid fa-arrow-left mr-1"></i>返回單字卡
+        </button>
+      </div>
+    </div>
+
+    <!-- 題號快速選擇列 -->
+    <div class="mb-4 bg-white px-3.5 py-2.5 rounded-2xl shadow-xs border border-rose-100">
+      <div class="flex items-center justify-between text-[11px] text-slate-400 mb-2">
+        <span class="font-bold text-slate-600"><i class="fa-solid fa-grip text-pink-400 mr-1"></i>題號選擇（點擊跳題 · 自動記錄進度）</span>
+        <span><span class="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-1"></span>對 <span class="inline-block w-2 h-2 rounded-full bg-rose-400 ml-2 mr-1"></span>錯 <span class="ml-2">⭐ 收藏</span></span>
+      </div>
+      <div id="p5-num-grid" class="flex flex-wrap gap-1.5"></div>
     </div>
 
     <div class="w-full max-w-3xl mx-auto flex items-center justify-center gap-3 sm:gap-5">
@@ -426,7 +444,13 @@
             <span id="p5-progress" class="font-bold text-slate-700">第 1 題 / 共 40 題</span>
             <span id="p5-meta-badge" class="px-2 py-0.5 rounded-full bg-pink-50 text-pink-600 border border-pink-100 font-bold text-[11px]">詞性辨析 · 600分</span>
           </div>
-          <span id="p5-score" class="font-extrabold text-pink-600 bg-pink-50 px-2.5 py-1 rounded-full">得分: 0</span>
+          <div class="flex items-center gap-2">
+            <button onclick="toggleCurrentPart5Star()" id="p5-star-btn" class="px-2.5 py-1 rounded-full border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold text-xs flex items-center gap-1 cursor-pointer transition-all" title="收藏 / 取消錯題 (Shift)">
+              <i id="p5-star-icon" class="fa-regular fa-star text-amber-400"></i>
+              <span id="p5-star-text">收藏</span>
+            </button>
+            <span id="p5-score" class="font-extrabold text-pink-600 bg-pink-50 px-2.5 py-1 rounded-full">得分: 0</span>
+          </div>
         </div>
 
         <div id="p5-question-area">
@@ -1582,6 +1606,7 @@
     let isFlipped = false;
     let starredSet = new Set(DEFAULT_STARS);
     let heartedSet = new Set(); // 儲存「一直記不住」的淺藍色愛心單字 ID
+    let p5StarredSet = new Set(); // 儲存 Part 5 閱讀錯題收藏 ID
     let readPartsSet = new Set(); // 儲存已讀單元鍵，格式如 "400-1", "400-2", "600-1"
     let isStarredOnlyMode = false;
     let isHeartedOnlyMode = false;
@@ -1717,6 +1742,9 @@
           if (Array.isArray(cloud.hearted_ids)) {
             heartedSet = new Set(cloud.hearted_ids);
           }
+          if (Array.isArray(cloud.p5_starred)) {
+            p5StarredSet = new Set(cloud.p5_starred);
+          }
           if (Array.isArray(cloud.read_parts)) {
             readPartsSet = new Set(cloud.read_parts);
           }
@@ -1748,6 +1776,7 @@
         const content = JSON.stringify({
           starred_ids: Array.from(starredSet).sort((a, b) => a - b),
           hearted_ids: Array.from(heartedSet).sort((a, b) => a - b),
+          p5_starred: Array.from(p5StarredSet).sort((a, b) => a - b),
           read_parts: Array.from(readPartsSet),
           updated_at: now
         });
@@ -1849,18 +1878,22 @@
       const starArr = Array.from(starredSet);
       const starJson = JSON.stringify(starArr);
       const heartArr = Array.from(heartedSet);
+      const p5StarArr = Array.from(p5StarredSet);
       try {
         localStorage.setItem('toeic_starred', starJson);
         localStorage.setItem('toeic400_starred', starJson);
         localStorage.setItem('toeic_hearted', JSON.stringify(heartArr));
+        localStorage.setItem('toeic_p5_starred', JSON.stringify(p5StarArr));
         localStorage.setItem('toeic_read_parts', JSON.stringify(Array.from(readPartsSet)));
       } catch(e) {}
       writeToIDB('starred_ids', starArr);
       writeToIDB('hearted_ids', heartArr);
+      writeToIDB('p5_starred', p5StarArr);
       writeToIDB('read_parts', Array.from(readPartsSet));
       try { setCookie('toeic400_starred', starJson, 365); } catch(e) {}
       updateStarredBadge();
       if (typeof updateHeartedBadge === 'function') updateHeartedBadge();
+      if (typeof updatePart5StarCount === 'function') updatePart5StarCount();
     }
 
     // 整合式全自動載入（本機優先防覆蓋 + 雲端 Gist 同步 + 保持網址乾淨）
@@ -1936,6 +1969,20 @@
       if (heartedSet.size === 0 && idb) {
         const idbHeart = await readFromIDB('hearted_ids');
         if (Array.isArray(idbHeart)) heartedSet = new Set(idbHeart);
+      }
+
+      // 讀取 Part 5 閱讀錯題收藏
+      try {
+        const lsP5 = localStorage.getItem('toeic_p5_starred');
+        if (lsP5) {
+          const parsed = JSON.parse(lsP5);
+          if (Array.isArray(parsed)) p5StarredSet = new Set(parsed);
+        }
+      } catch(e) {}
+
+      if (p5StarredSet.size === 0 && idb) {
+        const idbP5 = await readFromIDB('p5_starred');
+        if (Array.isArray(idbP5)) p5StarredSet = new Set(idbP5);
       }
 
       // 預設將 400-1 標記為已讀
@@ -2204,6 +2251,7 @@
           renderLevelButtons();
           renderPartButtons();
           updateCardUI();
+          if (typeof restorePart5IfLastPage === 'function') restorePart5IfLastPage();
         })
         .catch(err => {
           console.warn("Storage sync:", err);
@@ -3016,8 +3064,10 @@
       if (qItem) speakWord(qItem.word);
     }
 
-    // ===== 3 & 4. 鍵盤事件監聽：空白鍵 Space 翻面、Enter 鍵加入星號、左右鍵切換 =====
+    // ===== 3 & 4. 鍵盤事件監聽：空白鍵 Space 翻面、Enter 鍵加入愛心、Shift 鍵加入星號、左右鍵切換 =====
     window.addEventListener('keydown', (e) => {
+      const vocabPage = document.getElementById('page-vocab');
+      if (vocabPage && vocabPage.classList.contains('hidden')) return;
       const isCardMode = !document.getElementById('mode-flashcard').classList.contains('hidden');
       if (!isCardMode) return;
 
@@ -3098,12 +3148,90 @@
   </script>
   <script src="part5_data.js"></script>
   <script>
-    // ===== 多益閱讀 Part 5 單句填空控制邏輯 =====
+    // ===== 多益閱讀 Part 5 單句填空控制邏輯（支援題號跳題、錯題收藏、刷新保留進度） =====
     let p5Category = 'all';
     let p5List = [];
-    let p5WrongList = [];
     let p5Index = 0;
     let p5Score = 0;
+    let p5Answered = {}; // { [qId]: { selectedIdx, isCorrect } }
+
+    function getPart5StorageKey(cat) {
+      return `toeic_p5_progress_${cat}`;
+    }
+
+    function savePart5State() {
+      try {
+        localStorage.setItem('toeic_p5_last_cat', p5Category);
+        localStorage.setItem(getPart5StorageKey(p5Category), JSON.stringify({
+          index: p5Index,
+          answered: p5Answered
+        }));
+      } catch(e) {}
+    }
+
+    function loadPart5State(cat) {
+      try {
+        const raw = localStorage.getItem(getPart5StorageKey(cat));
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return {
+            index: typeof parsed.index === 'number' ? parsed.index : 0,
+            answered: parsed.answered && typeof parsed.answered === 'object' ? parsed.answered : {}
+          };
+        }
+      } catch(e) {}
+      return { index: 0, answered: {} };
+    }
+
+    function updatePart5StarCount() {
+      const el = document.getElementById('p5-starred-count');
+      if (el) el.innerText = p5StarredSet.size;
+    }
+
+    function updatePart5StarUI(qId) {
+      const icon = document.getElementById('p5-star-icon');
+      const text = document.getElementById('p5-star-text');
+      const btn = document.getElementById('p5-star-btn');
+      if (!icon || !text || !btn) return;
+      const isStarred = p5StarredSet.has(qId);
+      if (isStarred) {
+        icon.className = 'fa-solid fa-star text-amber-400';
+        text.innerText = '已收藏';
+        btn.className = 'px-2.5 py-1 rounded-full border border-amber-400 bg-amber-100 text-amber-800 font-bold text-xs flex items-center gap-1 cursor-pointer transition-all';
+      } else {
+        icon.className = 'fa-regular fa-star text-amber-400';
+        text.innerText = '收藏';
+        btn.className = 'px-2.5 py-1 rounded-full border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold text-xs flex items-center gap-1 cursor-pointer transition-all';
+      }
+    }
+
+    function toggleCurrentPart5Star() {
+      const q = p5List[p5Index];
+      if (!q) return;
+      if (p5StarredSet.has(q.id)) {
+        p5StarredSet.delete(q.id);
+        showToast(`已取消 Part 5 第 ${q.id} 題收藏`);
+      } else {
+        p5StarredSet.add(q.id);
+        showToast(`⭐ 已收藏 Part 5 第 ${q.id} 題`);
+      }
+      saveStarsAutomatically(true);
+      updatePart5StarCount();
+      updatePart5StarUI(q.id);
+      renderPart5NumGrid();
+
+      if (p5Category === 'starred') {
+        const remaining = PART5_QUESTIONS.filter(item => p5StarredSet.has(item.id));
+        if (remaining.length === 0) {
+          showToast('🎉 Part 5 錯題收藏已全部複習完成！返回全部題庫');
+          openPart5('all');
+          return;
+        }
+        p5List = remaining;
+        if (p5Index >= p5List.length) p5Index = p5List.length - 1;
+        loadPart5Question();
+      }
+    }
 
     function switchAppPage(page) {
       const vocabPage = document.getElementById('page-vocab');
@@ -3111,6 +3239,8 @@
       const vocabNav = document.getElementById('drawer-nav-vocab');
       const vocabBadge = document.getElementById('drawer-badge-vocab');
       const titleEl = document.getElementById('app-main-title');
+
+      try { localStorage.setItem('toeic_app_page', page); } catch(e) {}
 
       if (page === 'part5') {
         vocabPage.classList.add('hidden');
@@ -3128,40 +3258,136 @@
       toggleSidebar(false);
     }
 
-    function openPart5(category = 'all', customList = null) {
+    function restorePart5IfLastPage() {
+      updatePart5StarCount();
+      try {
+        if (localStorage.getItem('toeic_app_page') === 'part5') {
+          const lastCat = localStorage.getItem('toeic_p5_last_cat') || 'all';
+          openPart5(lastCat, null, true);
+        }
+      } catch(e) {}
+    }
+
+    function openPart5(category = 'all', customList = null, restoreSaved = true) {
       if (typeof PART5_QUESTIONS === 'undefined') {
         showToast('題庫載入中，請稍候再試');
         return;
       }
+
+      if (category === 'starred') {
+        const starredItems = PART5_QUESTIONS.filter(q => p5StarredSet.has(q.id));
+        if (starredItems.length === 0) {
+          showToast('目前還沒有 Part 5 錯題收藏！答錯會自動加入，或點擊題目右上角 ⭐');
+          if (p5List.length === 0) category = 'all';
+          else return;
+        }
+      }
+
       p5Category = category;
       switchAppPage('part5');
+      updatePart5StarCount();
 
       document.querySelectorAll('.p5-cat-btn').forEach(btn => {
-        btn.className = 'p5-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-50 text-slate-700 hover:bg-rose-100 border border-rose-100 cursor-pointer';
+        if (btn.id === 'p5-cat-starred') {
+          btn.className = 'p5-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200 cursor-pointer flex items-center gap-1';
+        } else {
+          btn.className = 'p5-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-50 text-slate-700 hover:bg-rose-100 border border-rose-100 cursor-pointer';
+        }
       });
       const activeBtn = document.getElementById(`p5-cat-${category}`);
       if (activeBtn) {
-        activeBtn.className = 'p5-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-pink-500 to-rose-400 text-white shadow-xs cursor-pointer';
+        if (category === 'starred') {
+          activeBtn.className = 'p5-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-400 text-white border border-amber-500 shadow-xs cursor-pointer flex items-center gap-1';
+        } else {
+          activeBtn.className = 'p5-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-pink-500 to-rose-400 text-white shadow-xs cursor-pointer';
+        }
       }
 
       if (customList) {
         p5List = [...customList];
+        p5Index = 0;
+        p5Answered = {};
       } else {
-        p5List = category === 'all'
-          ? [...PART5_QUESTIONS]
-          : PART5_QUESTIONS.filter(q => q.category === category);
-        for (let i = p5List.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [p5List[i], p5List[j]] = [p5List[j], p5List[i]];
+        if (category === 'all') {
+          p5List = [...PART5_QUESTIONS];
+        } else if (category === 'starred') {
+          p5List = PART5_QUESTIONS.filter(q => p5StarredSet.has(q.id));
+        } else {
+          p5List = PART5_QUESTIONS.filter(q => q.category === category);
+        }
+
+        if (restoreSaved) {
+          const saved = loadPart5State(category);
+          p5Answered = saved.answered;
+          p5Index = Math.min(Math.max(0, saved.index), Math.max(0, p5List.length - 1));
+        } else {
+          p5Index = 0;
+          p5Answered = {};
         }
       }
 
-      p5WrongList = [];
-      p5Index = 0;
-      p5Score = 0;
-      document.getElementById('p5-score').innerText = '得分: 0';
+      recalcPart5Score();
+      savePart5State();
       document.getElementById('p5-question-area').classList.remove('hidden');
       document.getElementById('p5-complete-area').classList.add('hidden');
+      renderPart5NumGrid();
+      loadPart5Question();
+    }
+
+    function recalcPart5Score() {
+      p5Score = p5List.reduce((acc, q) => acc + (p5Answered[q.id]?.isCorrect ? 1 : 0), 0);
+      const scoreEl = document.getElementById('p5-score');
+      if (scoreEl) scoreEl.innerText = `得分: ${p5Score}`;
+    }
+
+    function resetPart5Progress() {
+      p5Index = 0;
+      p5Answered = {};
+      recalcPart5Score();
+      savePart5State();
+      document.getElementById('p5-question-area').classList.remove('hidden');
+      document.getElementById('p5-complete-area').classList.add('hidden');
+      renderPart5NumGrid();
+      loadPart5Question();
+      showToast('已重置本組作答進度，從第 1 題開始');
+    }
+
+    function renderPart5NumGrid() {
+      const grid = document.getElementById('p5-num-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+      p5List.forEach((q, idx) => {
+        const ans = p5Answered[q.id];
+        const isCurrent = idx === p5Index;
+        const isStarred = p5StarredSet.has(q.id);
+        const btn = document.createElement('button');
+
+        let cls = 'w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer relative flex items-center justify-center border ';
+        if (isCurrent) {
+          cls += 'bg-gradient-to-r from-pink-500 to-rose-400 text-white border-pink-500 shadow-sm ring-2 ring-pink-200';
+        } else if (ans && ans.isCorrect) {
+          cls += 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100';
+        } else if (ans && !ans.isCorrect) {
+          cls += 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100';
+        } else {
+          cls += 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-pink-50 hover:border-pink-200';
+        }
+
+        btn.className = cls;
+        btn.innerHTML = `<span>${idx + 1}</span>${isStarred ? '<span class="absolute -top-1 -right-1 text-[9px] leading-none">⭐</span>' : ''}`;
+        btn.title = `跳至第 ${idx + 1} 題`;
+        btn.onclick = () => jumpToPart5Question(idx);
+        grid.appendChild(btn);
+      });
+    }
+
+    function jumpToPart5Question(idx) {
+      if (idx < 0 || idx >= p5List.length) return;
+      p5Index = idx;
+      savePart5State();
+      document.getElementById('p5-question-area').classList.remove('hidden');
+      document.getElementById('p5-complete-area').classList.add('hidden');
+      renderPart5NumGrid();
       loadPart5Question();
     }
 
@@ -3171,22 +3397,23 @@
       const feedback = document.getElementById('p5-feedback');
       const nextBtn = document.getElementById('p5-next-btn');
 
-      feedback.className = 'hidden p-4 rounded-2xl text-xs sm:text-sm leading-relaxed mb-4';
+      feedback.className = 'hidden p-4 rounded-2xl text-xs sm:text-sm leading-relaxed';
       feedback.innerHTML = '';
       nextBtn.classList.add('hidden');
 
       if (p5Index >= p5List.length) {
         qArea.classList.add('hidden');
         completeArea.classList.remove('hidden');
-        const wrongBtnHtml = p5WrongList.length > 0
-          ? `<button onclick="openPart5(p5Category, p5WrongList)" class="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs sm:text-sm shadow-sm cursor-pointer">只練錯題 (${p5WrongList.length} 題)</button>`
+        const wrongCount = p5List.filter(q => p5Answered[q.id] && !p5Answered[q.id].isCorrect).length;
+        const wrongBtnHtml = p5StarredSet.size > 0
+          ? `<button onclick="openPart5('starred')" class="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs sm:text-sm shadow-sm cursor-pointer">複習錯題收藏 (${p5StarredSet.size} 題)</button>`
           : '';
         completeArea.innerHTML = `
           <div class="text-5xl font-black text-pink-500 mb-2">${p5Score} / ${p5List.length}</div>
-          <p class="text-sm text-slate-600 mb-5">${p5WrongList.length === 0 ? '太厲害了！本組 Part 5 題目全部答對 🎉' : '練習完成！建議針對錯題再複習一次文法解析。'}</p>
+          <p class="text-sm text-slate-600 mb-5">${wrongCount === 0 ? '太厲害了！本組 Part 5 題目全部答對 🎉' : '練習完成！答錯的題目已自動加入「⭐ 錯題收藏」。'}</p>
           <div class="flex flex-wrap items-center justify-center gap-3">
             ${wrongBtnHtml}
-            <button onclick="openPart5(p5Category)" class="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold text-xs sm:text-sm shadow-md cursor-pointer">再練一次</button>
+            <button onclick="resetPart5Progress()" class="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold text-xs sm:text-sm shadow-md cursor-pointer">再練一次</button>
           </div>
         `;
         return;
@@ -3196,6 +3423,8 @@
       document.getElementById('p5-progress').innerText = `第 ${p5Index + 1} 題 / 共 ${p5List.length} 題`;
       document.getElementById('p5-meta-badge').innerText = `${q.category} · ${q.level}`;
       document.getElementById('p5-sentence').innerHTML = q.sentence.replace('-------', '<span class="inline-block min-w-[80px] border-b-2 border-pink-400 text-pink-600 text-center px-2 mx-1 font-extrabold">______</span>');
+      updatePart5StarUI(q.id);
+      renderPart5NumGrid();
 
       const optContainer = document.getElementById('p5-options');
       optContainer.innerHTML = '';
@@ -3207,9 +3436,18 @@
         btn.onclick = () => handlePart5Answer(idx, q, btn);
         optContainer.appendChild(btn);
       });
+
+      // 若這題已經作答過，恢復作答結果與解析顯示
+      const savedAns = p5Answered[q.id];
+      if (savedAns && typeof savedAns.selectedIdx === 'number') {
+        const allBtns = document.querySelectorAll('.p5-opt-btn');
+        if (allBtns[savedAns.selectedIdx]) {
+          applyPart5FeedbackUI(savedAns.selectedIdx, q, allBtns[savedAns.selectedIdx], false);
+        }
+      }
     }
 
-    function handlePart5Answer(selectedIdx, q, btnEl) {
+    function applyPart5FeedbackUI(selectedIdx, q, btnEl, isNewAnswer) {
       const allBtns = document.querySelectorAll('.p5-opt-btn');
       allBtns.forEach(b => b.disabled = true);
 
@@ -3221,8 +3459,6 @@
       btnEl.classList.remove('bg-white', 'text-slate-700', 'border-rose-100', 'hover:bg-pink-50', 'hover:border-pink-300');
 
       if (isCorrect) {
-        p5Score++;
-        document.getElementById('p5-score').innerText = `得分: ${p5Score}`;
         btnEl.classList.add('bg-emerald-500', 'text-white', 'border-emerald-500');
         feedback.className = 'p-4 rounded-2xl text-xs sm:text-sm leading-relaxed bg-emerald-50 text-emerald-900 border border-emerald-200';
         feedback.innerHTML = `
@@ -3234,7 +3470,12 @@
           <div class="text-slate-600"><strong>解析：</strong>${q.explanation}</div>
         `;
       } else {
-        p5WrongList.push(q);
+        if (isNewAnswer && !p5StarredSet.has(q.id)) {
+          p5StarredSet.add(q.id);
+          saveStarsAutomatically(true);
+          updatePart5StarCount();
+          updatePart5StarUI(q.id);
+        }
         btnEl.classList.add('bg-rose-500', 'text-white', 'border-rose-500');
         if (allBtns[q.answer]) {
           allBtns[q.answer].classList.remove('bg-white', 'text-slate-700', 'border-rose-100', 'hover:bg-pink-50', 'hover:border-pink-300');
@@ -3243,7 +3484,7 @@
         feedback.className = 'p-4 rounded-2xl text-xs sm:text-sm leading-relaxed bg-rose-50 text-rose-900 border border-rose-200';
         feedback.innerHTML = `
           <div class="font-extrabold text-rose-700 mb-1 flex items-center justify-between gap-2">
-            <span>❌ 答錯了！正確答案：(${labels[q.answer]}) ${q.options[q.answer]}</span>
+            <span>❌ 答錯了！已自動加入 ⭐ 錯題收藏｜正解：(${labels[q.answer]}) ${q.options[q.answer]}</span>
             <span class="text-[11px] font-medium text-rose-600/80">按 → 下一題</span>
           </div>
           <div class="text-slate-700 mb-1.5"><strong>翻譯：</strong>${q.zh}</div>
@@ -3255,8 +3496,17 @@
       nextBtn.classList.remove('hidden');
     }
 
+    function handlePart5Answer(selectedIdx, q, btnEl) {
+      p5Answered[q.id] = { selectedIdx, isCorrect: selectedIdx === q.answer };
+      recalcPart5Score();
+      applyPart5FeedbackUI(selectedIdx, q, btnEl, true);
+      savePart5State();
+      renderPart5NumGrid();
+    }
+
     function nextPart5Question() {
       p5Index++;
+      savePart5State();
       loadPart5Question();
     }
 
@@ -3271,6 +3521,14 @@
           e.preventDefault();
           nextPart5Question();
         }
+      } else if (e.key === 'ArrowLeft') {
+        if (p5Index > 0) {
+          e.preventDefault();
+          jumpToPart5Question(p5Index - 1);
+        }
+      } else if (e.key === 'Shift' && !e.repeat) {
+        e.preventDefault();
+        toggleCurrentPart5Star();
       }
     });
   </script>
