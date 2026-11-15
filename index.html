@@ -472,7 +472,7 @@
           <div id="p5-feedback" class="hidden p-4 rounded-2xl text-xs sm:text-sm leading-relaxed"></div>
         </div>
 
-        <div id="p5-word-tooltip" class="hidden fixed z-50 pointer-events-none px-3 py-1.5 rounded-xl bg-white/95 backdrop-blur-sm border border-amber-300 shadow-lg text-xs max-w-[260px]"></div>
+        <div id="p5-word-tooltip" class="hidden fixed z-50 px-3 py-1.5 rounded-xl bg-white/95 backdrop-blur-sm border border-amber-300 shadow-lg text-xs max-w-[300px]"></div>
 
         <div id="p5-complete-area" class="hidden text-center py-6"></div>
       </div>
@@ -3912,10 +3912,50 @@
     let p5HoveredSpan = null;
     let p5HoveredQId = null;
     let p5HoveredWord = null;
+    let p5TipHideTimer = null;
+    let p5IsEditingTip = false;
 
-    function showPart5WordTooltip(span, qId, word) {
+    function cancelPart5TipHide() {
+      if (p5TipHideTimer) {
+        clearTimeout(p5TipHideTimer);
+        p5TipHideTimer = null;
+      }
+    }
+
+    function schedulePart5TipHide() {
+      if (p5IsEditingTip) return;
+      cancelPart5TipHide();
+      p5TipHideTimer = setTimeout(() => {
+        if (!p5IsEditingTip) hidePart5WordTooltip();
+      }, 180);
+    }
+
+    (function initPart5TooltipHover() {
       const tip = document.getElementById('p5-word-tooltip');
       if (!tip) return;
+      tip.addEventListener('mouseenter', () => cancelPart5TipHide());
+      tip.addEventListener('mouseleave', () => schedulePart5TipHide());
+    })();
+
+    function positionPart5Tooltip(tip, span) {
+      if (!tip || !span) return;
+      const rect = span.getBoundingClientRect();
+      const tipRect = tip.getBoundingClientRect();
+      let left = rect.left + rect.width / 2 - tipRect.width / 2;
+      left = Math.max(8, Math.min(left, window.innerWidth - tipRect.width - 8));
+      let top = rect.top - tipRect.height - 6;
+      if (top < 8) {
+        top = rect.bottom + 6;
+      }
+      tip.style.left = `${left}px`;
+      tip.style.top = `${top}px`;
+    }
+
+    function showPart5WordTooltip(span, qId, word) {
+      if (p5IsEditingTip) return;
+      const tip = document.getElementById('p5-word-tooltip');
+      if (!tip) return;
+      cancelPart5TipHide();
       const item = (p5Highlights[qId] || []).find(i => i.word.toLowerCase() === word);
       if (!item) {
         hidePart5WordTooltip();
@@ -3929,24 +3969,85 @@
         <div class="flex items-center gap-1.5 flex-wrap">
           <span class="font-extrabold text-slate-900 bg-yellow-200/90 px-1 rounded">${escapeHtmlText(item.word)}</span>
           ${item.pos ? `<span class="text-[11px] text-amber-700 font-bold">${escapeHtmlText(item.pos)}</span>` : ''}
-          <span class="text-slate-700 font-semibold">${escapeHtmlText(item.meaning || '查詢中...')}</span>
+          <button onclick="startEditPart5Tooltip()" class="group inline-flex items-center gap-1 text-slate-700 hover:text-pink-600 font-semibold cursor-pointer rounded px-1 py-0.5 hover:bg-amber-50 transition-colors" title="點擊修改翻譯">
+            <span>${escapeHtmlText(item.meaning || '查詢中...')}</span>
+            <i class="fa-solid fa-pen text-[10px] text-slate-300 group-hover:text-pink-500"></i>
+          </button>
         </div>
       `;
       tip.classList.remove('hidden');
+      positionPart5Tooltip(tip, span);
+    }
 
-      const rect = span.getBoundingClientRect();
-      const tipRect = tip.getBoundingClientRect();
-      let left = rect.left + rect.width / 2 - tipRect.width / 2;
-      left = Math.max(8, Math.min(left, window.innerWidth - tipRect.width - 8));
-      let top = rect.top - tipRect.height - 8;
-      if (top < 8) {
-        top = rect.bottom + 8;
+    function startEditPart5Tooltip() {
+      const tip = document.getElementById('p5-word-tooltip');
+      if (!tip || !p5HoveredQId || !p5HoveredWord) return;
+      const item = (p5Highlights[p5HoveredQId] || []).find(i => i.word.toLowerCase() === p5HoveredWord);
+      if (!item) return;
+
+      cancelPart5TipHide();
+      p5IsEditingTip = true;
+      tip.innerHTML = `
+        <div class="flex items-center gap-1.5">
+          <span class="font-extrabold text-slate-900 bg-yellow-200/90 px-1 rounded shrink-0">${escapeHtmlText(item.word)}</span>
+          <input id="p5-tip-edit-input" type="text" value="${escapeHtmlText(item.meaning || '')}" class="w-36 sm:w-44 px-2 py-0.5 rounded-lg border border-amber-300 text-xs text-slate-800 focus:outline-none focus:border-pink-400" placeholder="輸入自訂翻譯...">
+          <button onclick="savePart5TooltipEdit()" class="px-2 py-0.5 rounded-lg bg-pink-500 hover:bg-pink-600 text-white font-bold text-[11px] cursor-pointer shrink-0">儲存</button>
+          <button onclick="cancelPart5TooltipEdit()" class="px-1.5 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 text-[11px] cursor-pointer shrink-0">取消</button>
+        </div>
+      `;
+      positionPart5Tooltip(tip, p5HoveredSpan);
+
+      const input = document.getElementById('p5-tip-edit-input');
+      if (input) {
+        input.focus();
+        input.select();
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            savePart5TooltipEdit();
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            cancelPart5TooltipEdit();
+          }
+        });
       }
-      tip.style.left = `${left}px`;
-      tip.style.top = `${top}px`;
+    }
+
+    function savePart5TooltipEdit() {
+      const input = document.getElementById('p5-tip-edit-input');
+      if (!input || !p5HoveredQId || !p5HoveredWord) {
+        p5IsEditingTip = false;
+        return;
+      }
+      const newMeaning = input.value.trim();
+      const item = (p5Highlights[p5HoveredQId] || []).find(i => i.word.toLowerCase() === p5HoveredWord);
+      if (item && newMeaning) {
+        item.meaning = newMeaning;
+        p5WordCache[p5HoveredWord] = { pos: item.pos || '', meaning: newMeaning };
+        try { localStorage.setItem('toeic_p5_word_cache', JSON.stringify(p5WordCache)); } catch(e) {}
+        saveStarsAutomatically(true);
+        showToast(`✏️ 已更新「${item.word}」的翻譯`);
+      }
+      p5IsEditingTip = false;
+      if (p5HoveredSpan) {
+        showPart5WordTooltip(p5HoveredSpan, p5HoveredQId, p5HoveredWord);
+      } else {
+        hidePart5WordTooltip();
+      }
+    }
+
+    function cancelPart5TooltipEdit() {
+      p5IsEditingTip = false;
+      if (p5HoveredSpan && p5HoveredQId && p5HoveredWord) {
+        showPart5WordTooltip(p5HoveredSpan, p5HoveredQId, p5HoveredWord);
+      } else {
+        hidePart5WordTooltip();
+      }
     }
 
     function hidePart5WordTooltip() {
+      cancelPart5TipHide();
+      p5IsEditingTip = false;
       const tip = document.getElementById('p5-word-tooltip');
       if (tip) tip.classList.add('hidden');
       p5HoveredSpan = null;
@@ -3963,6 +4064,7 @@
           if (isOptionsBox && !p5Answered[qId]) return;
           e.preventDefault();
           e.stopPropagation();
+          p5IsEditingTip = false;
           const word = span.getAttribute('data-word');
           if (!word) return;
           const isAlready = getPart5HighlightSet(qId).has(word);
@@ -3983,7 +4085,7 @@
           }
         });
         span.addEventListener('mouseleave', () => {
-          hidePart5WordTooltip();
+          schedulePart5TipHide();
         });
       });
     }
