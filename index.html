@@ -454,6 +454,10 @@
             <span id="p5-meta-badge" class="px-2 py-0.5 rounded-full bg-pink-50 text-pink-600 border border-pink-100 font-bold text-[11px]">詞性辨析 · 600分</span>
           </div>
           <div class="flex items-center gap-2">
+            <button onclick="togglePart5Highlighter()" id="p5-hl-toggle-btn" class="px-2.5 py-1 rounded-full border border-amber-300 bg-yellow-100 hover:bg-yellow-200/80 text-amber-900 font-bold text-xs flex items-center gap-1 cursor-pointer transition-all" title="螢光筆模式：點擊或拖曳塗抹題目/解析中的單字，立即顯示中文意思並自動保存">
+              <i class="fa-solid fa-highlighter text-amber-500"></i>
+              <span id="p5-hl-toggle-text">螢光筆: 開</span>
+            </button>
             <button onclick="toggleCurrentPart5Star()" id="p5-star-btn" class="px-2.5 py-1 rounded-full border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold text-xs flex items-center gap-1 cursor-pointer transition-all" title="收藏 / 取消錯題 (Shift)">
               <i id="p5-star-icon" class="fa-regular fa-star text-amber-400"></i>
               <span id="p5-star-text">收藏</span>
@@ -466,6 +470,7 @@
           <p id="p5-sentence" class="text-base sm:text-lg font-bold text-slate-800 leading-relaxed mb-6"></p>
           <div id="p5-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5"></div>
           <div id="p5-feedback" class="hidden p-4 rounded-2xl text-xs sm:text-sm leading-relaxed"></div>
+          <div id="p5-highlight-notes" class="hidden mt-3 p-3.5 rounded-2xl bg-yellow-50/90 border border-yellow-200 text-xs space-y-2"></div>
         </div>
 
         <div id="p5-complete-area" class="hidden text-center py-6"></div>
@@ -1617,6 +1622,7 @@
     let heartedSet = new Set(); // 儲存「一直記不住」的淺藍色愛心單字 ID
     let p5StarredSet = new Set(); // 儲存 Part 5 閱讀錯題收藏 ID
     let p5StarredItems = {}; // 儲存動態生成題目的完整內容，供錯題收藏跨重整使用
+    let p5Highlights = {}; // 儲存 Part 5 每題的螢光筆單字筆記 { [qId]: [{ word, pos, meaning }] }
     let readPartsSet = new Set(); // 儲存已讀單元鍵，格式如 "400-1", "400-2", "600-1"
     let isStarredOnlyMode = false;
     let isHeartedOnlyMode = false;
@@ -1758,6 +1764,9 @@
           if (cloud.p5_starred_items && typeof cloud.p5_starred_items === 'object') {
             p5StarredItems = cloud.p5_starred_items;
           }
+          if (cloud.p5_highlights && typeof cloud.p5_highlights === 'object') {
+            p5Highlights = cloud.p5_highlights;
+          }
           if (Array.isArray(cloud.read_parts)) {
             readPartsSet = new Set(cloud.read_parts);
           }
@@ -1791,6 +1800,7 @@
           hearted_ids: Array.from(heartedSet).sort((a, b) => a - b),
           p5_starred: Array.from(p5StarredSet).sort((a, b) => String(a).localeCompare(String(b))),
           p5_starred_items: p5StarredItems,
+          p5_highlights: p5Highlights,
           read_parts: Array.from(readPartsSet),
           updated_at: now
         });
@@ -1899,12 +1909,14 @@
         localStorage.setItem('toeic_hearted', JSON.stringify(heartArr));
         localStorage.setItem('toeic_p5_starred', JSON.stringify(p5StarArr));
         localStorage.setItem('toeic_p5_starred_items', JSON.stringify(p5StarredItems));
+        localStorage.setItem('toeic_p5_highlights', JSON.stringify(p5Highlights));
         localStorage.setItem('toeic_read_parts', JSON.stringify(Array.from(readPartsSet)));
       } catch(e) {}
       writeToIDB('starred_ids', starArr);
       writeToIDB('hearted_ids', heartArr);
       writeToIDB('p5_starred', p5StarArr);
       writeToIDB('p5_starred_items', p5StarredItems);
+      writeToIDB('p5_highlights', p5Highlights);
       writeToIDB('read_parts', Array.from(readPartsSet));
       try { setCookie('toeic400_starred', starJson, 365); } catch(e) {}
       updateStarredBadge();
@@ -1999,6 +2011,11 @@
           const parsedItems = JSON.parse(lsP5Items);
           if (parsedItems && typeof parsedItems === 'object') p5StarredItems = parsedItems;
         }
+        const lsP5Hl = localStorage.getItem('toeic_p5_highlights');
+        if (lsP5Hl) {
+          const parsedHl = JSON.parse(lsP5Hl);
+          if (parsedHl && typeof parsedHl === 'object') p5Highlights = parsedHl;
+        }
       } catch(e) {}
 
       if (p5StarredSet.size === 0 && idb) {
@@ -2008,6 +2025,10 @@
       if (Object.keys(p5StarredItems).length === 0 && idb) {
         const idbP5Items = await readFromIDB('p5_starred_items');
         if (idbP5Items && typeof idbP5Items === 'object') p5StarredItems = idbP5Items;
+      }
+      if (Object.keys(p5Highlights).length === 0 && idb) {
+        const idbP5Hl = await readFromIDB('p5_highlights');
+        if (idbP5Hl && typeof idbP5Hl === 'object') p5Highlights = idbP5Hl;
       }
 
       // 預設將 400-1 標記為已讀
@@ -3626,7 +3647,11 @@
       const q = p5List[p5Index];
       document.getElementById('p5-progress').innerText = `第 ${p5Index + 1} 題 / 共 ${p5List.length} 題`;
       document.getElementById('p5-meta-badge').innerText = `${q.category} · ${q.level}`;
-      document.getElementById('p5-sentence').innerHTML = q.sentence.replace('-------', '<span class="inline-block min-w-[80px] border-b-2 border-pink-400 text-pink-600 text-center px-2 mx-1 font-extrabold">______</span>');
+      const sentenceParts = q.sentence.split('-------');
+      const blankHtml = '<span class="inline-block min-w-[80px] border-b-2 border-pink-400 text-pink-600 text-center px-2 mx-1 font-extrabold">______</span>';
+      document.getElementById('p5-sentence').innerHTML = sentenceParts.map(part => wrapPart5WordsInText(part, q.id)).join(blankHtml);
+      bindPart5HighlightEvents(document.getElementById('p5-sentence'), q.id);
+      renderPart5HighlightNotes(q.id);
       updatePart5StarUI(q.id);
       renderPart5NumGrid();
 
@@ -3671,8 +3696,9 @@
             <span class="text-[11px] font-medium text-emerald-600/80">按 → 下一題</span>
           </div>
           <div class="text-slate-700 mb-1.5"><strong>翻譯：</strong>${q.zh}</div>
-          <div class="text-slate-600"><strong>解析：</strong>${q.explanation}</div>
+          <div class="text-slate-600"><strong>解析：</strong>${wrapPart5WordsInText(q.explanation, q.id)}</div>
         `;
+        bindPart5HighlightEvents(feedback, q.id);
       } else {
         if (isNewAnswer && !p5StarredSet.has(q.id)) {
           p5StarredSet.add(q.id);
@@ -3693,8 +3719,9 @@
             <span class="text-[11px] font-medium text-rose-600/80">按 → 下一題</span>
           </div>
           <div class="text-slate-700 mb-1.5"><strong>翻譯：</strong>${q.zh}</div>
-          <div class="text-slate-600"><strong>解析：</strong>${q.explanation}</div>
+          <div class="text-slate-600"><strong>解析：</strong>${wrapPart5WordsInText(q.explanation, q.id)}</div>
         `;
+        bindPart5HighlightEvents(feedback, q.id);
       }
 
       feedback.classList.remove('hidden');
@@ -3707,6 +3734,267 @@
       applyPart5FeedbackUI(selectedIdx, q, btnEl, true);
       savePart5State();
       renderPart5NumGrid();
+    }
+
+    // ===== Part 5 螢光筆畫重點 + 自動查字義 + 錯題保留 =====
+    let p5HighlighterOn = true;
+    let p5IsPainting = false;
+    let p5PaintMode = 'add';
+    let p5WordCache = {};
+    try {
+      const rawCache = localStorage.getItem('toeic_p5_word_cache');
+      if (rawCache) p5WordCache = JSON.parse(rawCache) || {};
+    } catch(e) {}
+
+    const P5_MINI_DICT = {
+      morale: { pos: 'n.', meaning: '士氣；鬥志' },
+      overall: { pos: 'adj./adv.', meaning: '整體的；總體而言' },
+      boost: { pos: 'v./n.', meaning: '提升；促進；推動' },
+      flexible: { pos: 'adj.', meaning: '彈性的；靈活的' },
+      policy: { pos: 'n.', meaning: '政策；方針' },
+      management: { pos: 'n.', meaning: '管理層；經營管理' },
+      prolonged: { pos: 'adj.', meaning: '長期的；持續許久的' },
+      disruptions: { pos: 'n.', meaning: '中斷；干擾；混亂' },
+      disruption: { pos: 'n.', meaning: '中斷；干擾；混亂' },
+      margins: { pos: 'n.', meaning: '利潤率；邊際；餘地' },
+      margin: { pos: 'n.', meaning: '利潤率；邊際' },
+      adhere: { pos: 'v.', meaning: '遵守；堅持；附著' },
+      strictly: { pos: 'adv.', meaning: '嚴格地' },
+      fluctuations: { pos: 'n.', meaning: '波動；起伏' },
+      fluctuate: { pos: 'v.', meaning: '波動；起伏' },
+      remuneration: { pos: 'n.', meaning: '報酬；薪酬' },
+      stipulate: { pos: 'v.', meaning: '規定；載明' },
+      stipulates: { pos: 'v.', meaning: '規定；載明' },
+      expedite: { pos: 'v.', meaning: '加速；促進' },
+      stringent: { pos: 'adj.', meaning: '嚴格的；嚴厲的' },
+      reimburse: { pos: 'v.', meaning: '報銷；償還' },
+      reimbursed: { pos: 'v.', meaning: '已報銷；償還' },
+      reimbursement: { pos: 'n.', meaning: '報銷；補償金' },
+      unanimously: { pos: 'adv.', meaning: '一致地；無異議地' },
+      complimentary: { pos: 'adj.', meaning: '免費贈送的；讚美的' },
+      lucrative: { pos: 'adj.', meaning: '獲利豐厚的' },
+      obsolete: { pos: 'adj.', meaning: '過時的；被淘汰的' },
+      conducive: { pos: 'adj.', meaning: '有助於…的' },
+      correspondence: { pos: 'n.', meaning: '往來信件；通訊' },
+      jeopardize: { pos: 'v.', meaning: '危及；損害' },
+      surpassed: { pos: 'v.', meaning: '超越；勝過' },
+      exhaustive: { pos: 'adj.', meaning: '詳盡徹底的' },
+      subsequently: { pos: 'adv.', meaning: '隨後；接著' },
+      delegation: { pos: 'n.', meaning: '代表團；授權' },
+      mandatory: { pos: 'adj.', meaning: '強制的；必須的' },
+      precaution: { pos: 'n.', meaning: '預防措施' },
+      notwithstanding: { pos: 'prep.', meaning: '儘管；雖然' },
+      pursuant: { pos: 'prep.', meaning: '依據；依照' },
+      accordance: { pos: 'n.', meaning: '一致；依照 (in accordance with)' },
+      regardless: { pos: 'adv./prep.', meaning: '不管；無論' },
+      discrepancy: { pos: 'n.', meaning: '差異；出入' },
+      prospective: { pos: 'adj.', meaning: '未來的；潛在的' },
+      consecutive: { pos: 'adj.', meaning: '連續的' },
+      tentatively: { pos: 'adv.', meaning: '暫時地；暫定地' }
+    };
+
+    document.addEventListener('mouseup', () => { p5IsPainting = false; });
+
+    function togglePart5Highlighter() {
+      p5HighlighterOn = !p5HighlighterOn;
+      const btn = document.getElementById('p5-hl-toggle-btn');
+      const txt = document.getElementById('p5-hl-toggle-text');
+      if (btn && txt) {
+        if (p5HighlighterOn) {
+          btn.className = 'px-2.5 py-1 rounded-full border border-amber-300 bg-yellow-100 hover:bg-yellow-200/80 text-amber-900 font-bold text-xs flex items-center gap-1 cursor-pointer transition-all';
+          txt.innerText = '螢光筆: 開';
+        } else {
+          btn.className = 'px-2.5 py-1 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 font-bold text-xs flex items-center gap-1 cursor-pointer transition-all';
+          txt.innerText = '螢光筆: 關';
+        }
+      }
+      const q = p5List[p5Index];
+      if (q) {
+        const sentenceEl = document.getElementById('p5-sentence');
+        if (sentenceEl) sentenceEl.classList.toggle('cursor-crosshair', p5HighlighterOn);
+      }
+    }
+
+    function getPart5HighlightSet(qId) {
+      const list = p5Highlights[qId] || [];
+      return new Set(list.map(item => item.word.toLowerCase()));
+    }
+
+    function escapeHtmlText(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function wrapPart5WordsInText(text, qId) {
+      const hlSet = getPart5HighlightSet(qId);
+      const safe = escapeHtmlText(text);
+      return safe.replace(/\b([A-Za-z]{2,}(?:-[A-Za-z]+)*)\b/g, (match) => {
+        const lower = match.toLowerCase();
+        const isHl = hlSet.has(lower);
+        const cls = isHl
+          ? 'p5-hl-word bg-yellow-200/90 text-slate-900 rounded px-0.5 border-b-2 border-amber-400 cursor-pointer transition-colors'
+          : 'p5-hl-word hover:bg-yellow-100/80 rounded px-0.5 cursor-pointer transition-colors';
+        return `<span class="${cls}" data-word="${lower}">${match}</span>`;
+      });
+    }
+
+    function bindPart5HighlightEvents(container, qId) {
+      if (!container) return;
+      container.querySelectorAll('.p5-hl-word').forEach(span => {
+        span.addEventListener('mousedown', (e) => {
+          if (!p5HighlighterOn) return;
+          e.preventDefault();
+          const word = span.getAttribute('data-word');
+          if (!word) return;
+          const isAlready = getPart5HighlightSet(qId).has(word);
+          p5IsPainting = true;
+          p5PaintMode = isAlready ? 'remove' : 'add';
+          applyPart5WordHighlight(qId, word, p5PaintMode === 'add');
+        });
+        span.addEventListener('mouseenter', () => {
+          if (!p5HighlighterOn || !p5IsPainting) return;
+          const word = span.getAttribute('data-word');
+          if (!word) return;
+          applyPart5WordHighlight(qId, word, p5PaintMode === 'add');
+        });
+      });
+    }
+
+    function syncPart5WordSpansUI(qId) {
+      const hlSet = getPart5HighlightSet(qId);
+      document.querySelectorAll('#p5-question-area .p5-hl-word').forEach(span => {
+        const w = span.getAttribute('data-word');
+        if (hlSet.has(w)) {
+          span.className = 'p5-hl-word bg-yellow-200/90 text-slate-900 rounded px-0.5 border-b-2 border-amber-400 cursor-pointer transition-colors';
+        } else {
+          span.className = 'p5-hl-word hover:bg-yellow-100/80 rounded px-0.5 cursor-pointer transition-colors';
+        }
+      });
+    }
+
+    function applyPart5WordHighlight(qId, word, shouldAdd) {
+      if (!p5Highlights[qId]) p5Highlights[qId] = [];
+      const idx = p5Highlights[qId].findIndex(item => item.word.toLowerCase() === word);
+
+      if (shouldAdd) {
+        if (idx !== -1) return;
+        const entry = { word, pos: '', meaning: '查詢中...' };
+        p5Highlights[qId].push(entry);
+        syncPart5WordSpansUI(qId);
+        renderPart5HighlightNotes(qId);
+        lookupPart5WordMeaning(word).then(res => {
+          const target = (p5Highlights[qId] || []).find(item => item.word.toLowerCase() === word);
+          if (target) {
+            target.pos = res.pos || '';
+            target.meaning = res.meaning || '（暫無釋義）';
+            saveStarsAutomatically(true);
+            renderPart5HighlightNotes(qId);
+          }
+        });
+      } else {
+        if (idx === -1) return;
+        p5Highlights[qId].splice(idx, 1);
+        if (p5Highlights[qId].length === 0) delete p5Highlights[qId];
+        syncPart5WordSpansUI(qId);
+        renderPart5HighlightNotes(qId);
+        saveStarsAutomatically(true);
+      }
+    }
+
+    function removePart5Highlight(qId, word) {
+      applyPart5WordHighlight(qId, word, false);
+    }
+
+    function renderPart5HighlightNotes(qId) {
+      const box = document.getElementById('p5-highlight-notes');
+      if (!box) return;
+      const list = p5Highlights[qId] || [];
+      if (list.length === 0) {
+        box.classList.add('hidden');
+        box.innerHTML = '';
+        return;
+      }
+      box.classList.remove('hidden');
+      box.innerHTML = `
+        <div class="flex items-center justify-between text-[11px] font-bold text-amber-800">
+          <span><i class="fa-solid fa-highlighter text-amber-500 mr-1"></i>螢光筆單字筆記（已自動保留）</span>
+          <span class="text-amber-600/80">點擊單字可再塗／取消</span>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          ${list.map(item => `
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white border border-amber-200 shadow-2xs text-slate-700">
+              <span class="font-extrabold text-slate-900 bg-yellow-200/80 px-1 rounded">${escapeHtmlText(item.word)}</span>
+              ${item.pos ? `<span class="text-[11px] text-amber-700 font-semibold">${escapeHtmlText(item.pos)}</span>` : ''}
+              <span class="text-slate-600 font-medium">${escapeHtmlText(item.meaning)}</span>
+              <button onclick="speakWord('${escapeHtmlText(item.word)}')" class="text-pink-400 hover:text-pink-600 cursor-pointer ml-0.5" title="發音">
+                <i class="fa-solid fa-volume-high text-[11px]"></i>
+              </button>
+              <button onclick="removePart5Highlight('${escapeHtmlText(qId)}', '${escapeHtmlText(item.word)}')" class="text-slate-300 hover:text-rose-500 cursor-pointer ml-0.5" title="移除螢光筆">
+                <i class="fa-solid fa-xmark text-xs"></i>
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    async function lookupPart5WordMeaning(rawWord) {
+      const word = rawWord.toLowerCase().trim();
+      if (p5WordCache[word]) return p5WordCache[word];
+
+      // 1. 先查內建 Part 5 精選字庫
+      if (P5_MINI_DICT[word]) {
+        p5WordCache[word] = P5_MINI_DICT[word];
+        try { localStorage.setItem('toeic_p5_word_cache', JSON.stringify(p5WordCache)); } catch(e) {}
+        return p5WordCache[word];
+      }
+
+      // 2. 再查本網站 1,000 單字資料庫 (含簡單字尾還原)
+      if (typeof VOCAB_DATA !== 'undefined') {
+        const candidates = [word];
+        if (word.endsWith('s')) candidates.push(word.slice(0, -1));
+        if (word.endsWith('es')) candidates.push(word.slice(0, -2));
+        if (word.endsWith('ed')) candidates.push(word.slice(0, -2), word.slice(0, -1));
+        if (word.endsWith('ing')) candidates.push(word.slice(0, -3), word.slice(0, -3) + 'e');
+        if (word.endsWith('ly')) candidates.push(word.slice(0, -2));
+        const found = VOCAB_DATA.find(v => candidates.includes(v.word.toLowerCase()));
+        if (found) {
+          const res = { pos: found.pos || '', meaning: found.meaning };
+          p5WordCache[word] = res;
+          try { localStorage.setItem('toeic_p5_word_cache', JSON.stringify(p5WordCache)); } catch(e) {}
+          return res;
+        }
+      }
+
+      // 3. 線上即時查詢繁體中文意思與詞性
+      let zhMeaning = '';
+      let pos = '';
+      try {
+        const [trRes, dictRes] = await Promise.allSettled([
+          fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-TW&dt=t&q=${encodeURIComponent(word)}`).then(r => r.json()),
+          fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`).then(r => r.ok ? r.json() : null)
+        ]);
+        if (trRes.status === 'fulfilled' && Array.isArray(trRes.value) && trRes.value[0]?.[0]?.[0]) {
+          zhMeaning = trRes.value[0][0][0];
+        }
+        if (dictRes.status === 'fulfilled' && Array.isArray(dictRes.value) && dictRes.value[0]?.meanings?.[0]?.partOfSpeech) {
+          const rawPos = dictRes.value[0].meanings[0].partOfSpeech;
+          const posMap = { noun: 'n.', verb: 'v.', adjective: 'adj.', adverb: 'adv.', preposition: 'prep.', conjunction: 'conj.' };
+          pos = posMap[rawPos] || rawPos;
+          if (!zhMeaning && dictRes.value[0].meanings[0].definitions?.[0]?.definition) {
+            zhMeaning = dictRes.value[0].meanings[0].definitions[0].definition;
+          }
+        }
+      } catch(e) {}
+
+      const result = { pos, meaning: zhMeaning || '（離線或查無釋義）' };
+      if (zhMeaning) {
+        p5WordCache[word] = result;
+        try { localStorage.setItem('toeic_p5_word_cache', JSON.stringify(p5WordCache)); } catch(e) {}
+      }
+      return result;
     }
 
     function nextPart5Question() {
