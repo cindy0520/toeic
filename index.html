@@ -3662,7 +3662,7 @@
       q.options.forEach((optText, idx) => {
         const btn = document.createElement('button');
         btn.className = 'p5-opt-btn w-full text-left p-3.5 rounded-2xl border border-rose-100 text-slate-700 font-semibold hover:bg-pink-50 hover:border-pink-300 transition-all text-sm bg-white shadow-xs cursor-pointer flex items-center gap-2.5';
-        btn.innerHTML = `<span class="w-6 h-6 rounded-full bg-rose-50 text-pink-600 font-extrabold text-xs flex items-center justify-center shrink-0">${labels[idx]}</span><span>${wrapPart5WordsInText(optText, q.id)}</span>`;
+        btn.innerHTML = `<span class="w-6 h-6 rounded-full bg-rose-50 text-pink-600 font-extrabold text-xs flex items-center justify-center shrink-0">${labels[idx]}</span><span>${wrapPart5OptionText(optText, q.id)}</span>`;
         btn.onclick = (e) => {
           if (p5Answered[q.id]) return;
           handlePart5Answer(idx, q, btn);
@@ -3795,8 +3795,58 @@
       discrepancy: { pos: 'n.', meaning: '差異；出入' },
       prospective: { pos: 'adj.', meaning: '未來的；潛在的' },
       consecutive: { pos: 'adj.', meaning: '連續的' },
-      tentatively: { pos: 'adv.', meaning: '暫時地；暫定地' }
+      tentatively: { pos: 'adv.', meaning: '暫時地；暫定地' },
+      'in order to': { pos: '片語', meaning: '為了；以便（後接原形動詞）' },
+      'in order that': { pos: '片語', meaning: '為了；以便（後接子句）' },
+      'so that': { pos: '片語', meaning: '以便；為了（後接子句）' },
+      'as well as': { pos: '片語', meaning: '以及；和；除了…之外還' },
+      'such as': { pos: '片語', meaning: '例如；諸如' },
+      'in accordance with': { pos: '片語', meaning: '依照；符合（規定、準則）' },
+      'with a view to': { pos: '片語', meaning: '為了；著眼於（後接 V-ing）' },
+      'in addition to': { pos: '片語', meaning: '除了…之外（還）' },
+      'in spite of': { pos: '片語', meaning: '儘管；雖然（後接名詞）' },
+      'in favor of': { pos: '片語', meaning: '贊成；支持；有利於' },
+      'in charge of': { pos: '片語', meaning: '負責；掌管' },
+      'in front of': { pos: '片語', meaning: '在…前面' },
+      'on behalf of': { pos: '片語', meaning: '代表…' },
+      'as opposed to': { pos: '片語', meaning: '相較於；而不是' },
+      'until further notice': { pos: '片語', meaning: '直到另行通知為止' },
+      'in case of': { pos: '片語', meaning: '萬一；以防發生（後接名詞）' },
+      'in case': { pos: '片語', meaning: '萬一；以防（後接子句）' },
+      'provided that': { pos: '片語', meaning: '只要；倘若（後接子句）' },
+      'regardless of': { pos: '片語', meaning: '不管；無論' },
+      'irrespective of': { pos: '片語', meaning: '不管；不顧' },
+      'pursuant to': { pos: '片語', meaning: '依據；依照（法規、政策）' },
+      'prior to': { pos: '片語', meaning: '在…之前' },
+      'due to': { pos: '片語', meaning: '由於；因為（後接名詞）' },
+      'because of': { pos: '片語', meaning: '因為；由於（後接名詞）' },
+      'instead of': { pos: '片語', meaning: '代替；而不是' },
+      'except for': { pos: '片語', meaning: '除了…之外' },
+      'even though': { pos: '片語', meaning: '雖然；儘管（後接子句）' },
+      'even if': { pos: '片語', meaning: '即使；就算' },
+      'for all': { pos: '片語', meaning: '儘管有…（= despite）' },
+      'no later than': { pos: '片語', meaning: '最遲不超過…' },
+      'as soon as': { pos: '片語', meaning: '一…就…' },
+      'by the time': { pos: '片語', meaning: '到…的時候為止' },
+      'at the moment': { pos: '片語', meaning: '目前；此刻' },
+      'pertaining to': { pos: '片語', meaning: '與…相關的' },
+      'compatible with': { pos: '片語', meaning: '與…相容' },
+      'conducive to': { pos: '片語', meaning: '有助於…' }
     };
+
+    const P5_PHRASES = [
+      'until further notice', 'in accordance with', 'with a view to', 'in addition to',
+      'in spite of', 'in favor of', 'in charge of', 'in front of', 'on behalf of',
+      'as opposed to', 'irrespective of', 'regardless of', 'in order that', 'in order to',
+      'no later than', 'at the moment', 'provided that', 'pertaining to', 'compatible with',
+      'conducive to', 'pursuant to', 'because of', 'instead of', 'except for',
+      'even though', 'in case of', 'as well as', 'by the time', 'as soon as',
+      'prior to', 'due to', 'such as', 'so that', 'even if', 'for all', 'in case'
+    ];
+    const P5_TOKEN_REGEX = new RegExp(
+      `\\b(?:${P5_PHRASES.map(p => p.replace(/\s+/g, '\\s+')).join('|')}|[A-Za-z]{2,}(?:-[A-Za-z]+)*)\\b`,
+      'gi'
+    );
 
     document.addEventListener('mouseup', () => { p5IsPainting = false; });
 
@@ -3835,14 +3885,28 @@
     function wrapPart5WordsInText(text, qId) {
       const hlSet = getPart5HighlightSet(qId);
       const safe = escapeHtmlText(text);
-      return safe.replace(/\b([A-Za-z]{2,}(?:-[A-Za-z]+)*)\b/g, (match) => {
-        const lower = match.toLowerCase();
+      return safe.replace(P5_TOKEN_REGEX, (match) => {
+        const lower = match.toLowerCase().replace(/\s+/g, ' ').trim();
         const isHl = hlSet.has(lower);
         const cls = isHl
           ? 'p5-hl-word bg-yellow-200/90 text-slate-900 rounded px-0.5 border-b-2 border-amber-400 cursor-pointer transition-colors'
           : 'p5-hl-word hover:bg-yellow-100/80 rounded px-0.5 cursor-pointer transition-colors';
         return `<span class="${cls}" data-word="${lower}">${match}</span>`;
       });
+    }
+
+    function wrapPart5OptionText(optText, qId) {
+      const trimmed = String(optText).trim();
+      if (trimmed.includes(' ')) {
+        const lower = trimmed.toLowerCase().replace(/\s+/g, ' ');
+        const hlSet = getPart5HighlightSet(qId);
+        const isHl = hlSet.has(lower);
+        const cls = isHl
+          ? 'p5-hl-word bg-yellow-200/90 text-slate-900 rounded px-0.5 border-b-2 border-amber-400 cursor-pointer transition-colors'
+          : 'p5-hl-word hover:bg-yellow-100/80 rounded px-0.5 cursor-pointer transition-colors';
+        return `<span class="${cls}" data-word="${escapeHtmlText(lower)}">${escapeHtmlText(trimmed)}</span>`;
+      }
+      return wrapPart5WordsInText(optText, qId);
     }
 
     let p5HoveredSpan = null;
